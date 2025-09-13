@@ -20,6 +20,7 @@ header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
 h1{text-align:center;margin:20px 0 10px 0;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
+#suggestions-header{text-align:center;font-size:24px;font-weight:700;margin:20px 0 10px 0;color:#fff;}
 p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 .profile-img{width:150px;height:150px;border-radius:50%;display:block;margin:0 auto 20px auto;}
 .actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
@@ -33,7 +34,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 #feedback-message{margin-top:10px;text-align:center;font-weight:bold;}
 #suggestions-feed{width:90%;max-width:700px;margin-bottom:50px;}
 .suggestion-card{background:#222;padding:15px;border-radius:8px;margin:10px 0;}
-.suggestion-card button{margin-right:10px;}
+.suggestion-card button{margin-right:5px;background:#6a0dad;color:white;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -55,7 +56,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 
 <div id="feedback-message"></div>
 
-<h2>View Suggestions</h2>
+<h2 id="suggestions-header">View Suggestions</h2>
 <div id="suggestions-feed"></div>
 
 <div class="modal-bg" id="modal-bg">
@@ -108,11 +109,11 @@ loginBtn.onclick = () => {
 };
 auth.onAuthStateChanged(u => { user=u; loginBtn.textContent=user?"Logout":"Sign in with Google"; });
 
-// Random Gradient
+// Random dark gradient
 function randomGradient() {
   const colors = [
-    ['#2c2c2c','#111111'], ['#4b0082','#000000'], ['#1e3c72','#2a5298'],
-    ['#ff512f','#dd2476'], ['#11998e','#38ef7d']
+    ['#0a0a0a','#1a1a1a'], ['#120022','#230033'], ['#001122','#002233'],
+    ['#002200','#004400'], ['#1a001a','#330033']
   ];
   const gradient = colors[Math.floor(Math.random()*colors.length)];
   document.body.style.background = `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`;
@@ -146,12 +147,12 @@ async function loadSuggestions(){
     const data = doc.data();
     const card = document.createElement('div');
     card.className='suggestion-card';
-    card.innerHTML=`
+    card.innerHTML = `
       <p><strong>${data.name} (Class ${data.class}${data.section?'-'+data.section:''})</strong></p>
       <p>${data.message}</p>
-      <div>
-        <button class="upvote">⬆ ${data.votes?.up||0}</button>
-        <button class="downvote">⬇ ${data.votes?.down||0}</button>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="upvote">⬆ ${data.votes?.up || 0}</button>
+        <button class="downvote">⬇ ${data.votes?.down || 0}</button>
       </div>
     `;
     feedContainer.appendChild(card);
@@ -159,70 +160,52 @@ async function loadSuggestions(){
     const upBtn = card.querySelector('.upvote');
     const downBtn = card.querySelector('.downvote');
 
-    upBtn.onclick = async ()=>{
-      if(!user){ showLoginPopup(); return; }
-      const ref = db.collection('suggestions').doc(doc.id);
-      await ref.update({'votes.up': firebase.firestore.FieldValue.increment(1)});
-      data.votes = {...data.votes, up: (data.votes?.up||0)+1};
-      upBtn.textContent = `⬆ ${data.votes.up}`;
+    upBtn.onclick = async () => {
+      await db.collection('suggestions').doc(doc.id)
+        .update({'votes.up': firebase.firestore.FieldValue.increment(1)});
+      upBtn.textContent = `⬆ ${(data.votes?.up || 0)+1}`;
     };
-    downBtn.onclick = async ()=>{
-      if(!user){ showLoginPopup(); return; }
-      const ref = db.collection('suggestions').doc(doc.id);
-      await ref.update({'votes.down': firebase.firestore.FieldValue.increment(1)});
-      data.votes = {...data.votes, down: (data.votes?.down||0)+1};
-      downBtn.textContent = `⬇ ${data.votes.down}`;
+    downBtn.onclick = async () => {
+      await db.collection('suggestions').doc(doc.id)
+        .update({'votes.down': firebase.firestore.FieldValue.increment(1)});
+      downBtn.textContent = `⬇ ${(data.votes?.down || 0)+1}`;
     };
   });
 }
 
-// Submit form
+// Submit
 submitBtn.onclick = async ()=>{
   if(!user){ showLoginPopup(); return; }
   submitBtn.disabled=true;
-  const name=document.getElementById('name').value.trim();
-  const cls=document.getElementById('class').value.trim();
-  const section=document.getElementById('section').value.trim();
-  const rollno=document.getElementById('rollno').value.trim();
-  const message=document.getElementById('message').value.trim();
-  if(!name||!cls||!rollno||!message){ feedbackMessage.textContent="Fill all required fields!"; submitBtn.disabled=false; return; }
-
-  const type = currentType;
-  const now=Date.now();
-  const limitRef = db.collection('limits').doc(user.uid);
-  const limitSnap = await limitRef.get();
-  let allow=true;
-  if(limitSnap.exists){
-    const data = limitSnap.data();
-    if(type==='suggestion' && data.lastSuggestion && now-data.lastSuggestion<7*24*60*60*1000) allow=false;
-    if(type==='complaint' && data.lastComplaint && now-data.lastComplaint<24*60*60*1000) allow=false;
+  const docData = {
+    type: currentType,
+    name: document.getElementById('name').value,
+    class: document.getElementById('class').value,
+    section: document.getElementById('section').value,
+    rollno: Number(document.getElementById('rollno').value),
+    message: document.getElementById('message').value,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    votes: {up:0, down:0}
+  };
+  try{
+    await db.collection('suggestions').add(docData);
+    feedbackMessage.textContent="✅ Submitted successfully!";
+    modalBg.style.display='none';
+    document.getElementById('name').value='';
+    document.getElementById('class').value='';
+    document.getElementById('section').value='';
+    document.getElementById('rollno').value='';
+    document.getElementById('message').value='';
+    loadSuggestions();
+  }catch(e){
+    console.error(e);
+    feedbackMessage.textContent="❌ Error submitting form";
   }
-
-  if(!allow){ feedbackMessage.textContent=`You've reached the limit for ${type}!`; submitBtn.disabled=false; return; }
-
-  const newDoc = await db.collection('suggestions').add({
-    type,message,name,class:cls,section,rollno,votes:{up:0,down:0},timestamp:firebase.firestore.FieldValue.serverTimestamp()
-  });
-  await limitRef.set({
-    ...(limitSnap.exists?limitSnap.data():{}),
-    ...(type==='suggestion'?{lastSuggestion:now}:{lastComplaint:now})
-  });
-
-  feedbackMessage.textContent="✅ Submitted successfully!";
-  submitBtn.disabled=false;
-  modalBg.style.display='none';
-  document.getElementById('name').value='';
-  document.getElementById('class').value='';
-  document.getElementById('section').value='';
-  document.getElementById('rollno').value='';
-  document.getElementById('message').value='';
-  loadSuggestions();
+  setTimeout(()=>{feedbackMessage.textContent=''; submitBtn.disabled=false;},3000);
 };
 
-window.onload = ()=>{
-  randomGradient();
-  loadSuggestions();
-};
+randomGradient();
+loadSuggestions();
 </script>
 </body>
 </html>
