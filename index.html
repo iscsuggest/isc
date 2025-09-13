@@ -4,188 +4,170 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ibn-e-Sina Portal</title>
-<link rel="icon" type="image/png" href="images/image.png">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
+<link rel="icon" href="images/image.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-top:90px;color:#fff;transition:background 0.8s;}
-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;position:fixed;top:0;z-index:100;background:linear-gradient(to bottom, rgba(17,17,17,0.9), rgba(17,17,17,0));transition:background 0.5s;}
-header img{height:50px;}
-header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
-h1{text-align:center;margin:20px 0 10px 0;}
-h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
-#suggestions-header{text-align:center;font-size:24px;font-weight:700;margin:20px 0 10px 0;color:#fff;}
-p.description{text-align:center;max-width:600px;margin-bottom:20px;}
-.profile-img{width:150px;height:150px;border-radius:50%;display:block;margin:0 auto 20px auto;}
-.actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
-.actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
-.actions button:hover{background:#8b2ecc;}
-.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;}
-.modal{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;}
-.modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
-.modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
-.modal .close{background:#333;}
-#feedback-message{margin-top:10px;text-align:center;font-weight:bold;}
-#suggestions-feed{width:90%;max-width:700px;margin-bottom:50px;}
-.suggestion-card{background:#222;padding:15px;border-radius:8px;margin:10px 0;}
-.suggestion-card button{margin-right:5px;background:#6a0dad;color:white;border:none;border-radius:5px;padding:4px 8px;cursor:pointer;}
+  html,body { margin:0;padding:0;font-family:sans-serif;height:100%; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; transition: background 1s; color:white; }
+  header { width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; position:sticky; top:0; background:rgba(0,0,0,0.6); z-index:10; }
+  header img { height:40px; }
+  #loginBtn, #logoutBtn { background:#fff;color:#000;border:none;padding:8px 15px;border-radius:5px;cursor:pointer; }
+  main { width:90%; max-width:800px; margin-top:20px; }
+  h1 { text-align:center;margin-bottom:20px; }
+  .modal-bg { position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center; z-index:20; }
+  .modal { background:#111;padding:20px;border-radius:10px; width:90%; max-width:400px; display:flex;flex-direction:column; }
+  .modal input, .modal textarea { margin-bottom:10px;padding:8px;border-radius:5px;border:1px solid rgba(255,255,255,0.3); background:#222;color:white; width:100%; }
+  #submitBtn { background:#4CAF50; color:white; border:none;padding:10px;border-radius:5px; cursor:pointer; }
+  .suggestion-card { background:rgba(255,255,255,0.1); margin-bottom:10px; padding:10px; border-radius:8px; display:flex;flex-direction:column; }
+  .vote { display:flex; justify-content:flex-start; margin-top:5px; gap:10px; }
+  .vote button { background:transparent;color:white;border:none;cursor:pointer;font-size:16px; }
+  .profile { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+  .profile img { border-radius:50%;height:50px;width:50px;object-fit:cover; }
 </style>
 </head>
 <body>
-
 <header>
   <img src="images/image.png" alt="Ibn-e-Sina Logo">
-  <button id="login-btn">Sign in with Google</button>
+  <button id="loginBtn">Sign in with Google</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
 </header>
 
-<img src="images/person.png" alt="Talal Mukhtar" class="profile-img">
-<h1>Talal Mukhtar</h1>
-<h2>Ibn-e-Sina Headboy</h2>
-<p class="description">Share your thoughts with me and I'll try my best to get back to you asap</p>
+<main>
+  <div class="profile">
+    <img src="images/person.png" alt="Talal Mukhtar">
+    <div>
+      <h2>Talal Mukhtar</h2>
+      <p>Ibn-e-Sina Headboy</p>
+      <p>Share your thoughts with me and I'll try my best to get back to you asap</p>
+    </div>
+  </div>
 
-<div class="actions">
-  <button id="suggestion-btn">Submit Suggestion</button>
-  <button id="complaint-btn">Submit Complaint</button>
-</div>
+  <h1 id="viewSuggestions">View Suggestions</h1>
+  <div id="suggestionsContainer">Loading...</div>
+  <button id="suggestionBtn">Add Suggestion</button>
+  <button id="complaintBtn">Add Complaint</button>
+</main>
 
-<div id="feedback-message"></div>
-
-<h2 id="suggestions-header">View Suggestions</h2>
-<div id="suggestions-feed"></div>
-
-<div class="modal-bg" id="modal-bg">
+<div class="modal-bg" id="modalBg">
   <div class="modal">
-    <h3 id="modal-title">Submit</h3>
     <input type="text" id="name" placeholder="Name">
     <input type="text" id="class" placeholder="Class">
     <input type="text" id="section" placeholder="Section">
     <input type="number" id="rollno" placeholder="Roll No">
     <textarea id="message" rows="4" placeholder="Your message"></textarea>
-    <button id="submit-btn">Submit</button>
-    <button class="close" id="close-modal">Cancel</button>
+    <button id="submitBtn">Submit</button>
+    <p id="feedbackMessage"></p>
   </div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
 const firebaseConfig = {
-    apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
-    authDomain: "ibn-e-sina-school.firebaseapp.com",
-    projectId: "ibn-e-sina-school",
-    storageBucket: "ibn-e-sina-school.appspot.com",
-    messagingSenderId: "897865466373",
-    appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
+  apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
+  authDomain: "ibn-e-sina-school.firebaseapp.com",
+  projectId: "ibn-e-sina-school",
+  storageBucket: "ibn-e-sina-school.appspot.com",
+  messagingSenderId: "897865466373",
+  appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const loginBtn = document.getElementById('login-btn');
-const suggestionBtn = document.getElementById('suggestion-btn');
-const complaintBtn = document.getElementById('complaint-btn');
-const modalBg = document.getElementById('modal-bg');
-const modalTitle = document.getElementById('modal-title');
-const submitBtn = document.getElementById('submit-btn');
-const closeModal = document.getElementById('close-modal');
-const feedContainer = document.getElementById('suggestions-feed');
-const feedbackMessage = document.getElementById('feedback-message');
-
-let currentType = null;
 let user = null;
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const modalBg = document.getElementById('modalBg');
+const submitBtn = document.getElementById('submitBtn');
+const feedbackMessage = document.getElementById('feedbackMessage');
+const suggestionsContainer = document.getElementById('suggestionsContainer');
 
-// Login/Logout
-loginBtn.onclick = () => {
-  if(!user){
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(res => { user=res.user; loginBtn.textContent="Logout"; });
-  } else {
-    auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; });
-  }
-};
-auth.onAuthStateChanged(u => { user=u; loginBtn.textContent=user?"Logout":"Sign in with Google"; });
-
-// Random dark gradient
-function randomGradient() {
-  const colors = [
-    ['#0a0a0a','#1a1a1a'], ['#120022','#230033'], ['#001122','#002233'],
-    ['#002200','#004400'], ['#1a001a','#330033']
+function randomGradient(){
+  const gradients = [
+    'linear-gradient(135deg,#0a0a0a,#1a1a1a)',
+    'linear-gradient(135deg,#0a0a0a,#001a33)',
+    'linear-gradient(135deg,#0a0a0a,#003300)',
+    'linear-gradient(135deg,#0a0a0a,#33001a)'
   ];
-  const gradient = colors[Math.floor(Math.random()*colors.length)];
-  document.body.style.background = `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`;
+  document.body.style.background = gradients[Math.floor(Math.random()*gradients.length)];
 }
+randomGradient();
 
-// Show modal
-function openModal(type){
-  if(!user){ showLoginPopup(); return; }
-  currentType=type;
-  modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";
-  modalBg.style.display="flex";
+auth.onAuthStateChanged(u=>{
+  user=u;
+  if(user){ loginBtn.style.display='none'; logoutBtn.style.display='inline-block'; }
+  else{ loginBtn.style.display='inline-block'; logoutBtn.style.display='none'; }
+});
+
+loginBtn.onclick = ()=>{
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+};
+
+logoutBtn.onclick = ()=>auth.signOut();
+
+function showModal(type){
+  if(!user){ alert('Please login first'); return; }
+  modalBg.style.display='flex';
+  submitBtn.dataset.type=type;
 }
-suggestionBtn.onclick = ()=>openModal('suggestion');
-complaintBtn.onclick = ()=>openModal('complaint');
-closeModal.onclick = ()=>{ modalBg.style.display='none'; }
+document.getElementById('suggestionBtn').onclick = ()=>showModal('suggestion');
+document.getElementById('complaintBtn').onclick = ()=>showModal('complaint');
+modalBg.onclick = (e)=>{ if(e.target==modalBg) modalBg.style.display='none'; }
 
-function showLoginPopup(){
-  feedbackMessage.textContent="⚠️ Please sign in first!";
-  setTimeout(()=>{feedbackMessage.textContent='';},3000);
-}
-
-// Load Suggestions
 async function loadSuggestions(){
-  feedContainer.innerHTML='Loading...';
-  const snapshot = await db.collection('suggestions')
-                        .where('type','==','suggestion')
-                        .orderBy('timestamp','desc')
-                        .get();
-  feedContainer.innerHTML='';
+  const snapshot = await db.collection('suggestions').orderBy('timestamp','desc').get();
+  suggestionsContainer.innerHTML='';
   snapshot.forEach(doc=>{
-    const data = doc.data();
+    if(doc.data().type !== 'suggestion') return;
+    const votes = doc.data().votes || { up:{}, down:{} };
     const card = document.createElement('div');
     card.className='suggestion-card';
     card.innerHTML = `
-      <p><strong>${data.name} (Class ${data.class}${data.section?'-'+data.section:''})</strong></p>
-      <p>${data.message}</p>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button class="upvote">⬆ ${data.votes?.up || 0}</button>
-        <button class="downvote">⬇ ${data.votes?.down || 0}</button>
+      <strong>${doc.data().name}</strong> (${doc.data().class}-${doc.data().section})<br>
+      ${doc.data().message}
+      <div class="vote">
+        <button class="upvote">⬆ ${Object.keys(votes.up||{}).length}</button>
+        <button class="downvote">⬇ ${Object.keys(votes.down||{}).length}</button>
       </div>
     `;
-    feedContainer.appendChild(card);
+    suggestionsContainer.appendChild(card);
 
-    const upBtn = card.querySelector('.upvote');
-    const downBtn = card.querySelector('.downvote');
-
-    upBtn.onclick = async () => {
-      await db.collection('suggestions').doc(doc.id)
-        .update({'votes.up': firebase.firestore.FieldValue.increment(1)});
-      upBtn.textContent = `⬆ ${(data.votes?.up || 0)+1}`;
+    card.querySelector('.upvote').onclick = async ()=>{
+      if(!user) return alert('Please login first');
+      const uid=user.uid;
+      if(votes.up[uid]) delete votes.up[uid]; else votes.up[uid]=true;
+      delete votes.down[uid];
+      await db.collection('suggestions').doc(doc.id).update({votes});
+      loadSuggestions();
     };
-    downBtn.onclick = async () => {
-      await db.collection('suggestions').doc(doc.id)
-        .update({'votes.down': firebase.firestore.FieldValue.increment(1)});
-      downBtn.textContent = `⬇ ${(data.votes?.down || 0)+1}`;
+    card.querySelector('.downvote').onclick = async ()=>{
+      if(!user) return alert('Please login first');
+      const uid=user.uid;
+      if(votes.down[uid]) delete votes.down[uid]; else votes.down[uid]=true;
+      delete votes.up[uid];
+      await db.collection('suggestions').doc(doc.id).update({votes});
+      loadSuggestions();
     };
   });
 }
 
-// Submit
 submitBtn.onclick = async ()=>{
-  if(!user){ showLoginPopup(); return; }
+  if(!user){ alert('Please login first'); return; }
   submitBtn.disabled=true;
-  const docData = {
-    type: currentType,
-    name: document.getElementById('name').value,
-    class: document.getElementById('class').value,
-    section: document.getElementById('section').value,
-    rollno: Number(document.getElementById('rollno').value),
-    message: document.getElementById('message').value,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    votes: {up:0, down:0}
+  const type=submitBtn.dataset.type;
+  const docData={
+    type,
+    name:document.getElementById('name').value,
+    class:document.getElementById('class').value,
+    section:document.getElementById('section').value,
+    rollno:Number(document.getElementById('rollno').value),
+    message:document.getElementById('message').value,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+    votes:{up:{},down:{}}
   };
   try{
     await db.collection('suggestions').add(docData);
@@ -204,7 +186,6 @@ submitBtn.onclick = async ()=>{
   setTimeout(()=>{feedbackMessage.textContent=''; submitBtn.disabled=false;},3000);
 };
 
-randomGradient();
 loadSuggestions();
 </script>
 </body>
