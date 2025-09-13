@@ -7,21 +7,34 @@
 <link rel="icon" type="image/png" href="images/image.png">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-<!-- Firebase SDKs for Google Login -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{background:linear-gradient(to bottom,#2c2c2c,#1a1a1a);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:#111;}
+header{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 20px;
+  background: linear-gradient(to bottom, rgba(17,17,17,0.9), rgba(17,17,17,0));
+  position: fixed;
+  top:0;
+  z-index:100;
+  transition: background 0.5s;
+}
+body{padding-top:90px;}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
-h1{text-align:center;margin:30px 0 10px 0;}
+h1{text-align:center;margin:20px 0 10px 0;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
-p.description{text-align:center;max-width:600px;margin-bottom:30px;}
+p.description{text-align:center;max-width:600px;margin-bottom:20px;}
+.profile-img{width:150px;height:150px;border-radius:50%;display:block;margin:0 auto 20px auto;}
 .actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
-.actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
+.actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
 .actions button:hover{background:#8b2ecc;}
 .modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;}
 .modal{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;}
@@ -31,11 +44,13 @@ p.description{text-align:center;max-width:600px;margin-bottom:30px;}
 </style>
 </head>
 <body>
+
 <header>
   <img src="images/image.png" alt="Ibn-e-Sina Logo">
   <button id="login-btn">Sign in with Google</button>
 </header>
 
+<img src="images/person.png" alt="Talal Mukhtar" class="profile-img">
 <h1>Talal Mukhtar</h1>
 <h2>Ibn-e-Sina Headboy</h2>
 <p class="description">Share your thoughts with me and I'll try my best to get back to you asap</p>
@@ -45,7 +60,6 @@ p.description{text-align:center;max-width:600px;margin-bottom:30px;}
   <button id="complaint-btn">Submit Complaint</button>
 </div>
 
-<!-- Modal Form -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h3 id="modal-title">Submit</h3>
@@ -60,112 +74,94 @@ p.description{text-align:center;max-width:600px;margin-bottom:30px;}
 </div>
 
 <script>
-  // Firebase config (public is okay for client-side)
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
     authDomain: "ibn-e-sina-school.firebaseapp.com",
     projectId: "ibn-e-sina-school",
     storageBucket: "ibn-e-sina-school.appspot.com",
     messagingSenderId: "897865466373",
     appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-  const loginBtn = document.getElementById('login-btn');
-  const suggestionBtn = document.getElementById('suggestion-btn');
-  const complaintBtn = document.getElementById('complaint-btn');
-  const modalBg = document.getElementById('modal-bg');
-  const modalTitle = document.getElementById('modal-title');
-  const submitBtn = document.getElementById('submit-btn');
-  const closeModal = document.getElementById('close-modal');
+const loginBtn = document.getElementById('login-btn');
+const suggestionBtn = document.getElementById('suggestion-btn');
+const complaintBtn = document.getElementById('complaint-btn');
+const modalBg = document.getElementById('modal-bg');
+const modalTitle = document.getElementById('modal-title');
+const submitBtn = document.getElementById('submit-btn');
+const closeModal = document.getElementById('close-modal');
 
-  let currentType = null;
-  let user = null;
+let currentType = null;
+let user = null;
 
-  loginBtn.onclick = () => {
-    if(!user){
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).then(res => {
-        user = res.user;
-        loginBtn.textContent = "Logout";
-      });
-    } else {
-      auth.signOut().then(() => {
-        user = null;
-        loginBtn.textContent = "Sign in with Google";
-      });
-    }
-  };
-
-  auth.onAuthStateChanged(u => {
-    user = u;
-    loginBtn.textContent = user ? "Logout" : "Sign in with Google";
-  });
-
-  function showLoginPopup() {
-    const popup = document.createElement('div');
-    popup.style.position = 'fixed';
-    popup.style.top = '50%';
-    popup.style.left = '50%';
-    popup.style.transform = 'translate(-50%, -50%)';
-    popup.style.background = '#111';
-    popup.style.padding = '20px';
-    popup.style.borderRadius = '10px';
-    popup.style.zIndex = '10000';
-    popup.style.textAlign = 'center';
-    popup.style.color = 'white';
-    popup.textContent = "Please sign in first!";
-    
-    const okBtn = document.createElement('button');
-    okBtn.textContent = "OK";
-    okBtn.style.marginTop = '10px';
-    okBtn.onclick = () => document.body.removeChild(popup);
-    popup.appendChild(okBtn);
-    document.body.appendChild(popup);
+loginBtn.onclick = () => {
+  if(!user){
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(res => { user=res.user; loginBtn.textContent="Logout"; });
+  } else {
+    auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; });
   }
+};
+auth.onAuthStateChanged(u => { user=u; loginBtn.textContent=user?"Logout":"Sign in with Google"; });
 
-  function openModal(type){
-    if(!user){ showLoginPopup(); return; }
-    currentType = type;
-    modalTitle.textContent = type==='suggestion' ? "Submit Suggestion" : "Submit Complaint";
-    modalBg.style.display = "flex";
-  }
+function showLoginPopup(){
+  const popup = document.createElement('div');
+  popup.style.position='fixed';
+  popup.style.top='50%';
+  popup.style.left='50%';
+  popup.style.transform='translate(-50%,-50%)';
+  popup.style.background='#111';
+  popup.style.padding='20px';
+  popup.style.borderRadius='10px';
+  popup.style.zIndex='10000';
+  popup.style.textAlign='center';
+  popup.style.color='white';
+  popup.textContent="Please sign in first!";
+  const okBtn=document.createElement('button');
+  okBtn.textContent="OK";
+  okBtn.style.marginTop='10px';
+  okBtn.onclick=()=>document.body.removeChild(popup);
+  popup.appendChild(okBtn);
+  document.body.appendChild(popup);
+}
 
-  suggestionBtn.onclick = () => openModal('suggestion');
-  complaintBtn.onclick = () => openModal('complaint');
-  closeModal.onclick = () => { modalBg.style.display='none'; }
+function openModal(type){
+  if(!user){ showLoginPopup(); return; }
+  currentType=type;
+  modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";
+  modalBg.style.display="flex";
+}
 
-  submitBtn.onclick = async () => {
-    if(!user){ showLoginPopup(); return; }
+suggestionBtn.onclick = ()=>openModal('suggestion');
+complaintBtn.onclick = ()=>openModal('complaint');
+closeModal.onclick = ()=>{ modalBg.style.display='none'; }
 
-    const name = document.getElementById('name').value.trim();
-    const className = document.getElementById('class').value.trim();
-    const section = document.getElementById('section').value.trim();
-    const rollno = document.getElementById('rollno').value.trim();
-    const message = document.getElementById('message').value.trim();
+submitBtn.onclick = async ()=>{
+  if(!user){ showLoginPopup(); return; }
+  const name=document.getElementById('name').value.trim();
+  const className=document.getElementById('class').value.trim();
+  const section=document.getElementById('section').value.trim();
+  const rollno=document.getElementById('rollno').value.trim();
+  const message=document.getElementById('message').value.trim();
+  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
+  submitBtn.disabled=true;
 
-    if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
-
-    submitBtn.disabled=true;
-
-    try {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec', {
-        method:'POST',
-        body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
-        headers:{'Content-Type':'application/json'}
-      });
-      const result = await res.json();
-      if(result.status==='ok'){
-        alert("✅ Submitted successfully!");
-        modalBg.style.display='none';
-        ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-      } else {
-        alert("❌ "+result.msg);
-      }
-    } catch(err){ alert("❌ Error submitting form: "+err.message); }
-    submitBtn.disabled=false;
-  };
+  try{
+    fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec',{
+      method:'POST',
+      body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
+      headers:{'Content-Type':'application/json'},
+      mode:'no-cors'
+    });
+    alert("✅ Submitted successfully!");
+    modalBg.style.display='none';
+    ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
+  } catch(err){ alert("❌ Error submitting form: "+err.message); }
+  submitBtn.disabled=false;
+};
 </script>
+
 </body>
 </html>
