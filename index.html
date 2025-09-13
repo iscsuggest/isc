@@ -193,34 +193,34 @@ submitBtn.onclick = async () => {
     return; 
   }
 
-  submitBtn.disabled = true;
+  const key = `${user.email}_${currentType}`;
+  const lastTime = localStorage.getItem(key);
+  const now = Date.now();
+  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000; // ms
 
-  // Rate limiter check
-  const canSubmitResult = canSubmit(currentType, user.email);
-  if(!canSubmitResult.allowed){
-    alert(`⏳ Please wait ${canSubmitResult.timeLeft} before submitting another ${currentType}.`);
-    submitBtn.disabled = false;
+  if(lastTime && now - parseInt(lastTime) < limit){
+    const msLeft = limit - (now - parseInt(lastTime));
+    const hours = Math.floor(msLeft / (1000*60*60));
+    const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
+    alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
     return;
   }
 
-  try {
+  submitBtn.disabled = true;
+
+  try{
     // Send to Google Apps Script
-    const scriptResponse = await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec', {
-      method: 'POST',
-      body: JSON.stringify({
-        name,
-        class: className,
-        section,
-        rollno,
-        message,
-        type: currentType,
-        email: user.email
-      }),
-      headers: {'Content-Type': 'application/json'},
-      mode: 'no-cors'
+    await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
+      method:'POST',
+      body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
+      headers:{'Content-Type':'application/json'},
+      mode:'no-cors'
     });
 
-    // Send to Firebase only if rate limit allows
+    // Mark submission timestamp
+    localStorage.setItem(key, Date.now());
+
+    // Save to Firestore
     await db.collection('submissions').add({
       name,
       class: className,
@@ -238,11 +238,11 @@ submitBtn.onclick = async () => {
 
     alert("✅ Submitted successfully!");
     modalBg.style.display = 'none';
-    ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value = '');
+    ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value='');
     loadSuggestions();
 
-  } catch(err) {
-    alert("❌ Error submitting form: "+err.message);
+  } catch(err){ 
+    alert("❌ Error submitting form: " + err.message); 
   }
 
   submitBtn.disabled = false;
@@ -337,6 +337,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
