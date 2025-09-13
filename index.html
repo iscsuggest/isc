@@ -148,6 +148,10 @@ closeModal.onclick = ()=>{ modalBg.style.display='none'; }
 // Rate limiter state (temporary local)
 let limiter = {}; // {email: timestamp}
 function checkRateLimit(email,type){
+   if(email === "fahdraahim@gmail.com") {
+    rateLimiterMsg.textContent = '';
+    return true;
+  }
   const now = Date.now();
   const key = email+'-'+type;
   if(limiter[key] && now - limiter[key] < (type==='suggestion'?7*24*60*60*1000:24*60*60*1000)){
@@ -223,3 +227,4 @@ async function vote(id,type){
 
 </body>
 </html>
+
