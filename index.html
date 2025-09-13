@@ -166,28 +166,41 @@ closeModal.onclick = ()=>{ modalBg.style.display='none'; }
 
 submitBtn.onclick = async ()=>{
   if(!user){ showLoginPopup(); return; }
-  const name=document.getElementById('name').value.trim();
-  const className=document.getElementById('class').value.trim();
-  const section=document.getElementById('section').value.trim();
-  const rollno=document.getElementById('rollno').value.trim();
-  const message=document.getElementById('message').value.trim();
-  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
-  submitBtn.disabled=true;
+  const name = document.getElementById('name').value.trim();
+  const className = document.getElementById('class').value.trim();
+  const section = document.getElementById('section').value.trim();
+  const rollno = document.getElementById('rollno').value.trim();
+  const message = document.getElementById('message').value.trim();
+  if(!name || !className || !section || !rollno || !message){ alert("Fill all fields!"); return; }
+  submitBtn.disabled = true;
 
   try{
-    await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
+    // Send to Apps Script (email)
+    await fetch('https://script.google.com/macros/s/.../exec',{
       method:'POST',
       body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
       headers:{'Content-Type':'application/json'},
       mode:'no-cors'
     });
+
+    // Add to Firestore
+    await db.collection('submissions').add({
+      name, class: className, section, rollno: Number(rollno),
+      message, type: currentType,
+      upvotes: 0, downvotes: 0, upvoters: [], downvoters: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
     alert("✅ Submitted successfully!");
     modalBg.style.display='none';
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-    loadSuggestions(); 
-  } catch(err){ alert("❌ Error submitting form: "+err.message); }
+    loadSuggestions();
+  } catch(err){
+    alert("❌ Error submitting form: "+err.message);
+  }
   submitBtn.disabled=false;
 };
+
 
 async function loadSuggestions(){
 
@@ -275,6 +288,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
