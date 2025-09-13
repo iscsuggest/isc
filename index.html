@@ -5,42 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ibn-e-Sina Portal</title>
 <link rel="icon" type="image/png" href="images/image.png">
-
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-<!-- Firebase SDKs -->
+<!-- Firebase SDKs for Google Login -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <style>
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif;}
-body { background: linear-gradient(to bottom, #2c2c2c, #1a1a1a); color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center;}
-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #111; }
-header img { height: 50px; }
-header button { padding: 8px 16px; border: none; border-radius: 5px; background: #6a0dad; color: white; cursor: pointer; font-weight: bold; }
-h1 { margin: 30px 0 10px 0; text-align: center; }
-h2 { text-align: center; font-weight: 400; margin-bottom: 10px; color: #ccc; }
-p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
-
-/* Action Buttons */
-.actions { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; width: 250px; }
-.actions button { padding: 12px; border-radius: 8px; border: none; background: #6a0dad; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-.actions button:hover { background: #8b2ecc; }
-
-/* Modal */
-.modal-bg { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index:1000; }
-.modal { background: #111; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
-.modal input, .modal textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; }
-.modal button { padding: 10px; border-radius: 5px; border: none; background: #6a0dad; color: white; font-weight: bold; cursor: pointer; }
-.modal .close { background: #333; }
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
+body{background:linear-gradient(to bottom,#2c2c2c,#1a1a1a);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:#111;}
+header img{height:50px;}
+header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
+h1{text-align:center;margin:30px 0 10px 0;}
+h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
+p.description{text-align:center;max-width:600px;margin-bottom:30px;}
+.actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
+.actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
+.actions button:hover{background:#8b2ecc;}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;}
+.modal{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;}
+.modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
+.modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
+.modal .close{background:#333;}
 </style>
 </head>
-
 <body>
 <header>
-    <img src="images/image.png" alt="Ibn-e-Sina Logo">
-    <button id="login-btn">Sign in with Google</button>
+  <img src="images/image.png" alt="Ibn-e-Sina Logo">
+  <button id="login-btn">Sign in with Google</button>
 </header>
 
 <h1>Talal Mukhtar</h1>
@@ -48,26 +41,26 @@ p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
 <p class="description">Share your thoughts with me and I'll try my best to get back to you asap</p>
 
 <div class="actions">
-    <button id="suggestion-btn">Submit Suggestion</button>
-    <button id="complaint-btn">Submit Complaint</button>
+  <button id="suggestion-btn">Submit Suggestion</button>
+  <button id="complaint-btn">Submit Complaint</button>
 </div>
 
-<!-- Modal -->
+<!-- Modal Form -->
 <div class="modal-bg" id="modal-bg">
-    <div class="modal">
-        <h3 id="modal-title">Submit</h3>
-        <input type="text" id="name" placeholder="Name">
-        <input type="text" id="class" placeholder="Class">
-        <input type="text" id="section" placeholder="Section">
-        <input type="number" id="rollno" placeholder="Roll No">
-        <textarea id="message" rows="4" placeholder="Your message"></textarea>
-        <button id="submit-btn">Submit</button>
-        <button class="close" id="close-modal">Cancel</button>
-    </div>
+  <div class="modal">
+    <h3 id="modal-title">Submit</h3>
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="class" placeholder="Class">
+    <input type="text" id="section" placeholder="Section">
+    <input type="number" id="rollno" placeholder="Roll No">
+    <textarea id="message" rows="4" placeholder="Your message"></textarea>
+    <button id="submit-btn">Submit</button>
+    <button class="close" id="close-modal">Cancel</button>
+  </div>
 </div>
 
 <script>
-  // Firebase config
+  // Firebase config (public is okay for client-side)
   const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
     authDomain: "ibn-e-sina-school.firebaseapp.com",
@@ -79,7 +72,6 @@ p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
-  // Elements
   const loginBtn = document.getElementById('login-btn');
   const suggestionBtn = document.getElementById('suggestion-btn');
   const complaintBtn = document.getElementById('complaint-btn');
@@ -91,7 +83,6 @@ p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
   let currentType = null;
   let user = null;
 
-  // Google Sign-In
   loginBtn.onclick = () => {
     if(!user){
       const provider = new firebase.auth.GoogleAuthProvider();
@@ -112,33 +103,41 @@ p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
     loginBtn.textContent = user ? "Logout" : "Sign in with Google";
   });
 
-  // Open modal
-  suggestionBtn.onclick = () => openModal('suggestion');
-  complaintBtn.onclick = () => openModal('complaint');
+  function showLoginPopup() {
+    const popup = document.createElement('div');
+    popup.style.position = 'fixed';
+    popup.style.top = '50%';
+    popup.style.left = '50%';
+    popup.style.transform = 'translate(-50%, -50%)';
+    popup.style.background = '#111';
+    popup.style.padding = '20px';
+    popup.style.borderRadius = '10px';
+    popup.style.zIndex = '10000';
+    popup.style.textAlign = 'center';
+    popup.style.color = 'white';
+    popup.textContent = "Please sign in first!";
+    
+    const okBtn = document.createElement('button');
+    okBtn.textContent = "OK";
+    okBtn.style.marginTop = '10px';
+    okBtn.onclick = () => document.body.removeChild(popup);
+    popup.appendChild(okBtn);
+    document.body.appendChild(popup);
+  }
 
   function openModal(type){
-    if(!user){ alert("Please sign in first!"); return; }
+    if(!user){ showLoginPopup(); return; }
     currentType = type;
     modalTitle.textContent = type==='suggestion' ? "Submit Suggestion" : "Submit Complaint";
     modalBg.style.display = "flex";
   }
 
-  closeModal.onclick = () => { modalBg.style.display = "none"; }
-
-  // Cooldown tracking in localStorage (client-side, can be bypassed)
-  function checkCooldown(type){
-    const key = `${user.email}_${type}`;
-    const last = localStorage.getItem(key);
-    if(!last) return false;
-    const now = Date.now();
-    const diff = now - Number(last);
-    if(type==='suggestion' && diff < 7*24*60*60*1000) return true;
-    if(type==='complaint' && diff < 24*60*60*1000) return true;
-    return false;
-  }
+  suggestionBtn.onclick = () => openModal('suggestion');
+  complaintBtn.onclick = () => openModal('complaint');
+  closeModal.onclick = () => { modalBg.style.display='none'; }
 
   submitBtn.onclick = async () => {
-    if(!user){ alert("Please sign in first!"); return; }
+    if(!user){ showLoginPopup(); return; }
 
     const name = document.getElementById('name').value.trim();
     const className = document.getElementById('class').value.trim();
@@ -146,36 +145,25 @@ p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
     const rollno = document.getElementById('rollno').value.trim();
     const message = document.getElementById('message').value.trim();
 
-    if(!name || !className || !section || !rollno || !message){ alert("Fill all fields!"); return; }
+    if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
 
-    if(checkCooldown(currentType)){
-      alert("You are still in cooldown for "+currentType);
-      return;
-    }
-
-    // Disable submit
-    submitBtn.disabled = true;
+    submitBtn.disabled=true;
 
     try {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec',{
+      const res = await fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec', {
         method:'POST',
-        body: JSON.stringify({
-          name, class: className, section, rollno, message, type: currentType, email: user.email
-        }),
+        body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
         headers:{'Content-Type':'application/json'}
       });
       const result = await res.json();
       if(result.status==='ok'){
         alert("✅ Submitted successfully!");
-        localStorage.setItem(`${user.email}_${currentType}`, Date.now());
         modalBg.style.display='none';
-        ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value='');
+        ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
       } else {
         alert("❌ "+result.msg);
       }
-    } catch(err){
-      alert("❌ Error submitting form: "+err.message);
-    }
+    } catch(err){ alert("❌ Error submitting form: "+err.message); }
     submitBtn.disabled=false;
   };
 </script>
