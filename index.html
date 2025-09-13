@@ -6,18 +6,19 @@
 <title>Ibn-e-Sina Portal</title>
 <link rel="icon" type="image/png" href="images/image.png">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;color:white;transition:background 1s;}
-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;position:fixed;top:0;background:rgba(0,0,0,0.6);z-index:100;}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;color:#fff;padding-top:100px;}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;position:fixed;top:0;z-index:100;background:rgba(0,0,0,0.7);}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
-body{padding-top:100px;}
+h1{text-align:center;margin:20px 0 10px 0;}
+h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
+p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 .profile-img{width:150px;height:150px;border-radius:50%;display:block;margin:0 auto 20px auto;}
 .actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
@@ -27,10 +28,11 @@ body{padding-top:100px;}
 .modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
 .modal .close{background:#333;}
-.suggestion-card{background:rgba(255,255,255,0.1);margin-bottom:10px;padding:10px;border-radius:8px;display:flex;flex-direction:column;}
-.vote{display:flex;gap:10px;margin-top:5px;}
-.vote button{background:transparent;color:white;border:none;cursor:pointer;font-size:16px;}
-.rate-timer{margin-top:5px;color:#ffcc00;font-size:14px;}
+.suggestions-container{width:90%;max-width:600px;margin-bottom:30px;}
+.suggestion-card{background:#222;margin:10px 0;padding:15px;border-radius:10px;position:relative;}
+.suggestion-card .votes{position:absolute;top:10px;right:10px;display:flex;gap:5px;}
+.suggestion-card .votes button{background:#555;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;}
+#view-suggestions{margin:20px;color:#fff;cursor:pointer;text-decoration:underline;text-align:center;}
 </style>
 </head>
 <body>
@@ -50,8 +52,8 @@ body{padding-top:100px;}
   <button id="complaint-btn">Submit Complaint</button>
 </div>
 
-<h1 style="text-align:center;">View Suggestions</h1>
-<div id="suggestions-container" style="width:90%;max-width:800px;margin-bottom:50px;">Loading...</div>
+<div id="view-suggestions">View Suggestions</div>
+<div class="suggestions-container" id="suggestions-container"></div>
 
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
@@ -61,7 +63,6 @@ body{padding-top:100px;}
     <input type="text" id="section" placeholder="Section">
     <input type="number" id="rollno" placeholder="Roll No">
     <textarea id="message" rows="4" placeholder="Your message"></textarea>
-    <div class="rate-timer" id="rate-timer"></div>
     <button id="submit-btn">Submit</button>
     <button class="close" id="close-modal">Cancel</button>
   </div>
@@ -77,8 +78,8 @@ const firebaseConfig = {
     appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
 const loginBtn=document.getElementById('login-btn');
 const suggestionBtn=document.getElementById('suggestion-btn');
@@ -88,105 +89,97 @@ const modalTitle=document.getElementById('modal-title');
 const submitBtn=document.getElementById('submit-btn');
 const closeModal=document.getElementById('close-modal');
 const suggestionsContainer=document.getElementById('suggestions-container');
-const rateTimer=document.getElementById('rate-timer');
+const viewSuggestions=document.getElementById('view-suggestions');
 
 let currentType=null;
 let user=null;
-const RATE_LIMIT_SEC=60; // 1 minute for demo
-let lastSubmitTime={};
 
 // Random dark gradient
-function randomGradient(){
-  const gradients=[
-    'linear-gradient(135deg,#0a0a0a,#1a1a1a)',
-    'linear-gradient(135deg,#0a0a0a,#001a33)',
-    'linear-gradient(135deg,#0a0a0a,#003300)',
-    'linear-gradient(135deg,#0a0a0a,#33001a)'
-  ];
-  document.body.style.background=gradients[Math.floor(Math.random()*gradients.length)];
-}
-randomGradient();
+const darkGradients=[
+  ['#111','#222'],['#111','#1a1a1a'],['#0a0a0a','#1f1f1f'],['#0d0d0d','#1a1a2a'],['#111','#333']
+];
+document.body.style.background=`linear-gradient(to bottom, ${darkGradients[Math.floor(Math.random()*darkGradients.length)].join(',')})`;
 
-// Auth
-loginBtn.onclick=()=>{ if(!user){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } else auth.signOut(); };
-auth.onAuthStateChanged(u=>{
-  user=u;
-  loginBtn.textContent=user?"Logout":"Sign in with Google";
-  loadSuggestions();
-});
+// Login
+loginBtn.onclick=()=>{
+  if(!user){
+    const provider=new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(res=>{user=res.user;loginBtn.textContent="Logout";}).catch(console.error);
+  }else{auth.signOut().then(()=>{user=null;loginBtn.textContent="Sign in with Google";});}
+};
+auth.onAuthStateChanged(u=>{user=u;loginBtn.textContent=user?"Logout":"Sign in with Google";});
 
 // Modal
-function showLoginPopup(){ alert("Please login first!"); }
+function showLoginPopup(){
+  const popup=document.createElement('div');
+  popup.style.position='fixed';
+  popup.style.top='50%';
+  popup.style.left='50%';
+  popup.style.transform='translate(-50%,-50%)';
+  popup.style.background='#111';
+  popup.style.padding='20px';
+  popup.style.borderRadius='10px';
+  popup.style.zIndex='10000';
+  popup.style.textAlign='center';
+  popup.style.color='white';
+  popup.textContent="Please sign in first!";
+  const okBtn=document.createElement('button');
+  okBtn.textContent="OK";
+  okBtn.style.marginTop='10px';
+  okBtn.onclick=()=>document.body.removeChild(popup);
+  popup.appendChild(okBtn);
+  document.body.appendChild(popup);
+}
+
 function openModal(type){
   if(!user){ showLoginPopup(); return; }
   currentType=type;
   modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";
-  modalBg.style.display='flex';
-  updateRateTimer();
+  modalBg.style.display="flex";
 }
+
 suggestionBtn.onclick=()=>openModal('suggestion');
 complaintBtn.onclick=()=>openModal('complaint');
-closeModal.onclick=()=>{ modalBg.style.display='none'; rateTimer.textContent=''; }
-
-// Rate Timer
-function updateRateTimer(){
-  if(!user) return;
-  const last=lastSubmitTime[user.uid]||0;
-  const diff=RATE_LIMIT_SEC - Math.floor((Date.now()-last)/1000);
-  if(diff>0){
-    rateTimer.textContent=`⏱ Wait ${diff} seconds before submitting again`;
-    submitBtn.disabled=true;
-    setTimeout(updateRateTimer,1000);
-  } else {
-    rateTimer.textContent='';
-    submitBtn.disabled=false;
-  }
-}
+closeModal.onclick=()=>{modalBg.style.display='none';}
 
 // Submit
-submitBtn.onclick=async ()=>{
+submitBtn.onclick=async()=>{
   if(!user){ showLoginPopup(); return; }
-  const last=lastSubmitTime[user.uid]||0;
-  if(Date.now()-last<RATE_LIMIT_SEC*1000){ alert("You're rate limited!"); return; }
-
   const name=document.getElementById('name').value.trim();
   const className=document.getElementById('class').value.trim();
   const section=document.getElementById('section').value.trim();
   const rollno=document.getElementById('rollno').value.trim();
   const message=document.getElementById('message').value.trim();
   if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
-
   submitBtn.disabled=true;
+
   try{
-    await db.collection('suggestions').add({
-      type:currentType,
-      name,class:className,section,rollno:Number(rollno),
-      message,timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-      votes:{up:{},down:{}}
-    });
-    lastSubmitTime[user.uid]=Date.now();
+    await db.collection('suggestions').add({type:currentType,name,class:className,section,rollno,message,timestamp:Date.now(),votes:{up:{},down:{}}});
+    // Apps Script Email
+    fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec',{
+      method:'POST',
+      body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
+      headers:{'Content-Type':'application/json'}
+    }).then(res=>console.log('Email sent')).catch(e=>console.error(e));
     alert("✅ Submitted successfully!");
     modalBg.style.display='none';
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-    loadSuggestions();
-  } catch(e){ console.error(e); alert("❌ Error submitting form"); }
+  }catch(err){alert("❌ Error submitting form: "+err.message);}
   submitBtn.disabled=false;
-  updateRateTimer();
 };
 
-// Load suggestions with votes
-async function loadSuggestions(){
-  const snapshot=await db.collection('suggestions').orderBy('timestamp','desc').get();
+// View Suggestions + votes
+viewSuggestions.onclick=async()=>{
   suggestionsContainer.innerHTML='';
-  snapshot.forEach(doc=>{
-    if(doc.data().type!=='suggestion') return;
-    const votes=doc.data().votes||{up:{},down:{}};
+  const query=await db.collection('suggestions').where('type','==','suggestion').orderBy('timestamp','desc').get();
+  query.forEach(doc=>{
+    const data=doc.data();
+    const votes=data.votes||{up:{},down:{}};
     const card=document.createElement('div');
     card.className='suggestion-card';
     card.innerHTML=`
-      <strong>${doc.data().name}</strong> (${doc.data().class}-${doc.data().section})<br>
-      ${doc.data().message}
-      <div class="vote">
+      <p><strong>${data.name}:</strong> ${data.message}</p>
+      <div class="votes">
         <button class="upvote">⬆ ${Object.keys(votes.up||{}).length}</button>
         <button class="downvote">⬇ ${Object.keys(votes.down||{}).length}</button>
       </div>
@@ -199,7 +192,7 @@ async function loadSuggestions(){
       if(votes.up[uid]) delete votes.up[uid]; else votes.up[uid]=true;
       delete votes.down[uid];
       await db.collection('suggestions').doc(doc.id).update({votes});
-      loadSuggestions();
+      viewSuggestions.click();
     };
     card.querySelector('.downvote').onclick=async()=>{
       if(!user){ showLoginPopup(); return; }
@@ -207,10 +200,10 @@ async function loadSuggestions(){
       if(votes.down[uid]) delete votes.down[uid]; else votes.down[uid]=true;
       delete votes.up[uid];
       await db.collection('suggestions').doc(doc.id).update({votes});
-      loadSuggestions();
+      viewSuggestions.click();
     };
   });
-}
+};
 </script>
 </body>
 </html>
