@@ -22,9 +22,9 @@ header{
 body{padding-top:90px;}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
-h1{text-align:center;margin:20px 0 10px 0;}
+h1{text-align:center;margin:20px 0 10px 0;color:white;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
-p.description{text-align:center;max-width:600px;margin-bottom:20px;}
+p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .profile-img{width:150px;height:150px;border-radius:50%;display:block;margin:0 auto 20px auto;}
 .actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
@@ -34,6 +34,8 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 .modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
 .modal .close{background:#333;}
+  .modal h3 {
+    color: white; margin-bottom: 10px;text-align: center;}
 .vote-container{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px;}
 .vote-btn{cursor:pointer;background:#444;border:none;padding:5px 10px;border-radius:5px;color:white;}
 .vote-count{color:white;font-weight:bold;}
@@ -235,4 +237,5 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
