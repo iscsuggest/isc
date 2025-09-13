@@ -30,6 +30,7 @@ body{padding-top:100px;}
 .suggestion-card{background:rgba(255,255,255,0.1);margin-bottom:10px;padding:10px;border-radius:8px;display:flex;flex-direction:column;}
 .vote{display:flex;gap:10px;margin-top:5px;}
 .vote button{background:transparent;color:white;border:none;cursor:pointer;font-size:16px;}
+.rate-timer{margin-top:5px;color:#ffcc00;font-size:14px;}
 </style>
 </head>
 <body>
@@ -60,6 +61,7 @@ body{padding-top:100px;}
     <input type="text" id="section" placeholder="Section">
     <input type="number" id="rollno" placeholder="Roll No">
     <textarea id="message" rows="4" placeholder="Your message"></textarea>
+    <div class="rate-timer" id="rate-timer"></div>
     <button id="submit-btn">Submit</button>
     <button class="close" id="close-modal">Cancel</button>
   </div>
@@ -78,19 +80,22 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const loginBtn = document.getElementById('login-btn');
-const suggestionBtn = document.getElementById('suggestion-btn');
-const complaintBtn = document.getElementById('complaint-btn');
-const modalBg = document.getElementById('modal-bg');
-const modalTitle = document.getElementById('modal-title');
-const submitBtn = document.getElementById('submit-btn');
-const closeModal = document.getElementById('close-modal');
-const suggestionsContainer = document.getElementById('suggestions-container');
+const loginBtn=document.getElementById('login-btn');
+const suggestionBtn=document.getElementById('suggestion-btn');
+const complaintBtn=document.getElementById('complaint-btn');
+const modalBg=document.getElementById('modal-bg');
+const modalTitle=document.getElementById('modal-title');
+const submitBtn=document.getElementById('submit-btn');
+const closeModal=document.getElementById('close-modal');
+const suggestionsContainer=document.getElementById('suggestions-container');
+const rateTimer=document.getElementById('rate-timer');
 
 let currentType=null;
 let user=null;
+const RATE_LIMIT_SEC=60; // 1 minute for demo
+let lastSubmitTime={};
 
-// random dark gradient
+// Random dark gradient
 function randomGradient(){
   const gradients=[
     'linear-gradient(135deg,#0a0a0a,#1a1a1a)',
@@ -103,12 +108,7 @@ function randomGradient(){
 randomGradient();
 
 // Auth
-loginBtn.onclick = ()=>{
-  if(!user){
-    const provider=new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  } else auth.signOut();
-};
+loginBtn.onclick=()=>{ if(!user){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } else auth.signOut(); };
 auth.onAuthStateChanged(u=>{
   user=u;
   loginBtn.textContent=user?"Logout":"Sign in with Google";
@@ -116,47 +116,67 @@ auth.onAuthStateChanged(u=>{
 });
 
 // Modal
-function showLoginPopup(){
-  alert("Please login first!");
-}
+function showLoginPopup(){ alert("Please login first!"); }
 function openModal(type){
   if(!user){ showLoginPopup(); return; }
   currentType=type;
   modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";
   modalBg.style.display='flex';
+  updateRateTimer();
 }
-suggestionBtn.onclick = ()=>openModal('suggestion');
-complaintBtn.onclick = ()=>openModal('complaint');
-closeModal.onclick = ()=>{ modalBg.style.display='none'; }
+suggestionBtn.onclick=()=>openModal('suggestion');
+complaintBtn.onclick=()=>openModal('complaint');
+closeModal.onclick=()=>{ modalBg.style.display='none'; rateTimer.textContent=''; }
+
+// Rate Timer
+function updateRateTimer(){
+  if(!user) return;
+  const last=lastSubmitTime[user.uid]||0;
+  const diff=RATE_LIMIT_SEC - Math.floor((Date.now()-last)/1000);
+  if(diff>0){
+    rateTimer.textContent=`⏱ Wait ${diff} seconds before submitting again`;
+    submitBtn.disabled=true;
+    setTimeout(updateRateTimer,1000);
+  } else {
+    rateTimer.textContent='';
+    submitBtn.disabled=false;
+  }
+}
 
 // Submit
-submitBtn.onclick = async ()=>{
+submitBtn.onclick=async ()=>{
   if(!user){ showLoginPopup(); return; }
+  const last=lastSubmitTime[user.uid]||0;
+  if(Date.now()-last<RATE_LIMIT_SEC*1000){ alert("You're rate limited!"); return; }
+
   const name=document.getElementById('name').value.trim();
   const className=document.getElementById('class').value.trim();
   const section=document.getElementById('section').value.trim();
   const rollno=document.getElementById('rollno').value.trim();
   const message=document.getElementById('message').value.trim();
   if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
+
   submitBtn.disabled=true;
   try{
     await db.collection('suggestions').add({
       type:currentType,
-      name,class:className,section,rollno:Number(rollno),message,
-      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+      name,class:className,section,rollno:Number(rollno),
+      message,timestamp:firebase.firestore.FieldValue.serverTimestamp(),
       votes:{up:{},down:{}}
     });
+    lastSubmitTime[user.uid]=Date.now();
     alert("✅ Submitted successfully!");
     modalBg.style.display='none';
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     loadSuggestions();
   } catch(e){ console.error(e); alert("❌ Error submitting form"); }
   submitBtn.disabled=false;
+  updateRateTimer();
 };
 
-// Load Suggestions with votes
+// Load suggestions with votes
 async function loadSuggestions(){
-  const snapshot = await db.collection('suggestions').orderBy('timestamp','desc').get();
+  const snapshot=await db.collection('suggestions').orderBy('timestamp','desc').get();
   suggestionsContainer.innerHTML='';
   snapshot.forEach(doc=>{
     if(doc.data().type!=='suggestion') return;
@@ -173,7 +193,7 @@ async function loadSuggestions(){
     `;
     suggestionsContainer.appendChild(card);
 
-    card.querySelector('.upvote').onclick = async ()=>{
+    card.querySelector('.upvote').onclick=async()=>{
       if(!user){ showLoginPopup(); return; }
       const uid=user.uid;
       if(votes.up[uid]) delete votes.up[uid]; else votes.up[uid]=true;
@@ -181,7 +201,7 @@ async function loadSuggestions(){
       await db.collection('suggestions').doc(doc.id).update({votes});
       loadSuggestions();
     };
-    card.querySelector('.downvote').onclick = async ()=>{
+    card.querySelector('.downvote').onclick=async()=>{
       if(!user){ showLoginPopup(); return; }
       const uid=user.uid;
       if(votes.down[uid]) delete votes.down[uid]; else votes.down[uid]=true;
