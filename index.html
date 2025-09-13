@@ -190,71 +190,67 @@ submitBtn.onclick = async ()=>{
 };
 
 async function loadSuggestions(){
-const loadingContainer = document.getElementById('loading-container');
-loadingContainer.style.display = 'flex';  // show loading
-suggestionsContainer.innerHTML = '';      // clear previous suggestions
 
-try{
-  const snapshot = await db.collection('submissions').where('type','==','suggestion').get();
-  
-  loadingContainer.style.display = 'none'; // hide loading after data arrives
-
-  if(snapshot.empty){
-    suggestionsContainer.innerHTML = '<p style="color:white;">No suggestions yet</p>';
-    return;
-  }
-
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    const card = document.createElement('div');
-    card.className='suggestion-card';
-    card.innerHTML = `<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
-      <div class="vote-container">
-        <button class="vote-btn upvote">⬆</button>
-        <span class="vote-count">${data.upvotes||0}</span>
-        <button class="vote-btn downvote">⬇</button>
-        <span class="vote-count">${data.downvotes||0}</span>
-      </div>`;
-    
-    // upvote / downvote logic here...
-    suggestionsContainer.appendChild(card);
-  });
-} catch(err){
-  loadingContainer.style.display = 'none';
-  suggestionsContainer.innerHTML = '<p style="color:white;">❌ Failed to load suggestions</p>';
-  console.error(err);
-}
-
+  suggestionsContainer.innerHTML='Loading...';
 
   try{
+
     const snapshot=await db.collection('submissions').where('type','==','suggestion').get();
+
     suggestionsContainer.innerHTML='';
+
     snapshot.forEach(doc=>{
+
       const data=doc.data();
+
       const card=document.createElement('div');
+
       card.className='suggestion-card';
+
       card.innerHTML=`<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
+
       <div class="vote-container">
+
         <button class="vote-btn upvote">⬆</button>
+
         <span class="vote-count">${data.upvotes||0}</span>
+
         <button class="vote-btn downvote">⬇</button>
+
         <span class="vote-count">${data.downvotes||0}</span>
+
       </div>`;
+
       const upBtn=card.querySelector('.upvote');
+
       const downBtn=card.querySelector('.downvote');
 
+
+
       upBtn.onclick=async ()=>{
+
         if(!user) { showLoginPopup(); return; }
+
         const userId=user.uid;
+
         const docRef=db.collection('submissions').doc(doc.id);
+
         const upvoters=data.upvoters||[];
+
         const downvoters=data.downvoters||[];
+
         if(upvoters.includes(userId)||downvoters.includes(userId)) return;
+
         await docRef.update({
+
           upvotes:(data.upvotes||0)+1,
+
           upvoters:firebase.firestore.FieldValue.arrayUnion(userId)
+
         });
+
         loadSuggestions();
+
       };
 
       downBtn.onclick=async ()=>{
@@ -279,6 +275,7 @@ try{
 
 </body>
 </html>
+
 
 
 
