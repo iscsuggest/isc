@@ -1,249 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ibn-e-Sina Portal</title>
-  <link rel="icon" href="images/image.png">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1c1c1c, #3a3a3a);
-      color: #fff;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background: rgba(0, 0, 0, 0.6);
-    }
-    header img {
-      height: 40px;
-    }
-    header button {
-      background: #6c63ff;
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .profile {
-      text-align: center;
-      margin-top: 40px;
-    }
-    .profile img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 3px solid #6c63ff;
-    }
-    .profile h1 { margin: 10px 0 5px; }
-    .profile p { margin: 5px 0; opacity: 0.8; }
-    .actions {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 40px;
-    }
-    .actions button {
-      background: #6c63ff;
-      color: #fff;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .actions button:disabled {
-      background: gray;
-      cursor: not-allowed;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #111;
-      padding: 30px;
-      border-radius: 12px;
-      width: 400px;
-      text-align: left;
-    }
-    .modal-content h2 {
-      margin-bottom: 15px;
-    }
-    .modal-content input, .modal-content textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      background: #222;
-      border: 1px solid #444;
-      color: #fff;
-      border-radius: 6px;
-    }
-    .modal-content button {
-      background: #6c63ff;
-      border: none;
-      color: #fff;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .popup {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #6c63ff;
-      padding: 15px 20px;
-      border-radius: 8px;
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ibn-e-Sina Portal</title>
+<!-- Favicon / logo -->
+<link rel="icon" type="image/png" href="images/image.png">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* General Styles */
+    * { box-sizing: border-box; margin:0; padding:0; font-family: 'Roboto', sans-serif;}
+    body { background: linear-gradient(to bottom, #2c2c2c, #1a1a1a); color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center;}
+    header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #111; }
+    header img { height: 50px; }
+    header button { padding: 8px 16px; border: none; border-radius: 5px; background: #6a0dad; color: white; cursor: pointer; font-weight: bold; }
+    h1 { margin: 30px 0 10px 0; text-align: center; }
+    h2 { text-align: center; font-weight: 400; margin-bottom: 10px; color: #ccc; }
+    p.description { text-align: center; max-width: 600px; margin-bottom: 30px; }
+    
+    /* Action Buttons */
+    .actions { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; width: 250px; }
+    .actions button { padding: 12px; border-radius: 8px; border: none; background: #6a0dad; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+    .actions button:hover { background: #8b2ecc; }
+
+    /* Modal */
+    .modal-bg { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index:1000; }
+    .modal { background: #111; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+    .modal input, .modal textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #555; background: #222; color: white; }
+    .modal button { padding: 10px; border-radius: 5px; border: none; background: #6a0dad; color: white; font-weight: bold; cursor: pointer; }
+    .modal .close { background: #333; }
+
+    /* Submissions */
+    .submissions { max-width: 700px; width: 90%; margin-bottom: 50px; display: flex; flex-direction: column; gap: 10px; }
+    .submission-card { background: #222; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; }
+    .submission-card .votes { display: flex; gap: 10px; align-items: center; }
+    .submission-card button { background: #333; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .submission-card span { min-width: 20px; text-align: center; }
+</style>
 </head>
+
 <body>
-  <header>
-    <img src="images/image.png" alt="Logo">
-    <button id="auth-btn">Sign in with Google</button>
-  </header>
 
-  <div class="profile">
-    <img src="images/person.png" alt="Talal Mukhtar">
-    <h1>Talal Mukhtar</h1>
-    <p>Ibn-e-Sina Headboy</p>
-    <p>Share your thoughts with me and I'll try my best to get back to you asap</p>
-  </div>
+<header>
+    <img src="images/image.png" alt="Ibn-e-Sina Logo">
+    <button id="login-btn">Sign in with Google</button>
+</header>
 
-  <div class="actions">
-    <button id="suggestionBtn">Submit Suggestion</button>
-    <button id="complaintBtn">Submit Complaint</button>
-  </div>
+<h1>Talal Mukhtar</h1>
+<h2>Ibn-e-Sina Headboy</h2>
+<p class="description">Share your thoughts with me and I'll try my best to get back to you asap</p>
 
-  <!-- Modal -->
-  <div class="modal" id="formModal">
-    <div class="modal-content">
-      <h2 id="formTitle">Submit</h2>
-      <input type="text" id="name" placeholder="Your Name">
-      <input type="text" id="class" placeholder="Class & Section">
-      <input type="number" id="rollno" placeholder="Roll No">
-      <textarea id="message" rows="5" placeholder="Write here..."></textarea>
-      <button id="submitForm">Submit</button>
+<div class="actions">
+    <button id="suggestion-btn">Submit Suggestion</button>
+    <button id="complaint-btn">Submit Complaint</button>
+</div>
+
+<div class="submissions" id="submissions">
+    <!-- Suggestions will be listed here -->
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+    <div class="modal">
+        <h3 id="modal-title">Submit</h3>
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="class" placeholder="Class">
+        <input type="text" id="section" placeholder="Section">
+        <input type="number" id="rollno" placeholder="Roll No">
+        <textarea id="message" rows="4" placeholder="Your message"></textarea>
+        <button id="submit-btn">Submit</button>
+        <button class="close" id="close-modal">Cancel</button>
     </div>
-  </div>
+</div>
 
-  <!-- Confirmation popup -->
-  <div class="popup" id="popup"></div>
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
+    authDomain: "ibn-e-sina-school.firebaseapp.com",
+    projectId: "ibn-e-sina-school",
+    storageBucket: "ibn-e-sina-school.appspot.com",
+    messagingSenderId: "897865466373",
+    appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  // Elements
+  const loginBtn = document.getElementById('login-btn');
+  const suggestionBtn = document.getElementById('suggestion-btn');
+  const complaintBtn = document.getElementById('complaint-btn');
+  const modalBg = document.getElementById('modal-bg');
+  const modalTitle = document.getElementById('modal-title');
+  const submitBtn = document.getElementById('submit-btn');
+  const closeModal = document.getElementById('close-modal');
+  const submissionsDiv = document.getElementById('submissions');
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
-      authDomain: "ibn-e-sina-school.firebaseapp.com",
-      projectId: "ibn-e-sina-school",
-      storageBucket: "ibn-e-sina-school.firebasestorage.app",
-      messagingSenderId: "897865466373",
-      appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
-    };
+  let currentType = null;
+  let user = null;
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    const authBtn = document.getElementById("auth-btn");
-    const modal = document.getElementById("formModal");
-    const submitForm = document.getElementById("submitForm");
-    const popup = document.getElementById("popup");
-
-    let currentType = "";
-    let user = null;
-
-    // Auth handling
-    onAuthStateChanged(auth, (u) => {
-      if (u) {
-        user = u;
-        authBtn.textContent = "Logout";
-      } else {
+  // Google Sign-In
+  loginBtn.onclick = () => {
+    if (!user) {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(res => {
+        user = res.user;
+        loginBtn.textContent = "Logout";
+      });
+    } else {
+      auth.signOut().then(() => {
         user = null;
-        authBtn.textContent = "Sign in with Google";
-      }
-    });
-
-    authBtn.addEventListener("click", () => {
-      if (user) {
-        signOut(auth);
-      } else {
-        signInWithPopup(auth, provider).catch(err => alert("Sign in failed: " + err.message));
-      }
-    });
-
-    // Open modal
-    document.getElementById("suggestionBtn").addEventListener("click", () => {
-      if (!user) return showPopup("Please sign in first");
-      currentType = "Suggestion";
-      modal.style.display = "flex";
-      document.getElementById("formTitle").textContent = "Submit Suggestion";
-    });
-    document.getElementById("complaintBtn").addEventListener("click", () => {
-      if (!user) return showPopup("Please sign in first");
-      currentType = "Complaint";
-      modal.style.display = "flex";
-      document.getElementById("formTitle").textContent = "Submit Complaint";
-    });
-
-    // Submit form
-    submitForm.addEventListener("click", async () => {
-      const name = document.getElementById("name").value.trim();
-      const cls = document.getElementById("class").value.trim();
-      const rollno = document.getElementById("rollno").value.trim();
-      const message = document.getElementById("message").value.trim();
-
-      if (!name || !cls || !rollno || !message) {
-        return showPopup("All fields required!");
-      }
-
-      try {
-        // Save to Firestore
-        await addDoc(collection(db, "entries"), {
-          uid: user.uid,
-          type: currentType,
-          name, class: cls, rollno, message,
-          timestamp: serverTimestamp()
-        });
-
-        // Send email via Google Apps Script
-        await fetch("https://script.google.com/macros/s/AKfycbwKGbpZtZ_aKy2Vh0rv6BtKv8_ciMIdExb2uMJAatVJ_7bzbaxEE7ntw3fSrUlkf6xS/exec", {
-          method: "POST",
-          body: JSON.stringify({ type: currentType, name, class: cls, rollno, message }),
-          headers: { "Content-Type": "application/json" }
-        });
-
-        modal.style.display = "none";
-        showPopup("✅ Submitted successfully!");
-      } catch (err) {
-        console.error("Error submitting form:", err);
-        showPopup("❌ Error: " + err.message);
-      }
-    });
-
-    // Close modal if clicked outside
-    window.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; }
-
-    function showPopup(msg) {
-      popup.textContent = msg;
-      popup.style.display = "block";
-      setTimeout(() => popup.style.display = "none", 3000);
+        loginBtn.textContent = "Sign in with Google";
+      });
     }
-  </script>
-</body>
-</html>
+  };
+
+  auth.onAuthStateChanged(u => {
+    user = u;
+    loginBtn.textContent = user ? "Logout" : "Sign in with Google";
+  });
+
+  // Open modal
+  suggestionBtn.onclick = () => openModal('suggestion');
+  complaintBtn.onclick = () => openModal('complaint');
+
+  function openModal(type) {
+    if (!user) { alert("Please sign in first!"); return; }
+    currentType = type;
+    modalTitle.textContent = type === 'suggestion' ? "Submit Suggestion" : "Submit Complaint";
+    modalBg.style.display = "flex";
+  }
+
+  closeModal.onclick = () => { modalBg.style.display = "none"; }
+
+  // Cooldown tracking
+  async function checkCooldown(email, type) {
+    const doc = await db.collection('cooldowns').doc(email).get();
+    if (!doc.exists) return false;
+    const data = doc.data();
+    const now = Date.now();
+    if (type === 'suggestion' && data.suggestion && now - data.suggestion.toMillis() < 7*24*60*60*1000) return true;
+    if (type === 'complaint' && data.complaint && now - data.complaint.toMillis() < 24*60*60*1000) return true;
+    return false;
+  }
+
+  // Submit
+  submitBtn.onclick = async () => {
+    if (!user) { alert("Please sign in first!"); return; }
+
+    const name = document.getElementById('name').value.trim();
+    const className = document.getElementById('class').value.trim();
+    const section = document.getElementById('section').value.trim();
+    const rollno = document.getElementById('rollno').value.trim();
+    const message = document.getElementById('message').value.trim();
+
+    if(!name || !className || !section || !rollno || !message) { alert("Fill all fields!"); return; }
+
+    if(await checkCooldown(user.email, currentType)) {
+      alert("You are still in cooldown period for " + currentType);
+      return;
+    }
+
+    await db.collection('entries').add({
+      type: currentType,
+      name, class: className, section, rollno, message, email: user.email,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      upvotes:0, downvotes:0
+    });
+
+    const update = {};
+    update[currentType] = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('cooldowns').doc(user.email).set(update, {merge:true});
+
+    modalBg.style.display = "none";
+    alert("✅ Submitted successfully!");
+
+   
