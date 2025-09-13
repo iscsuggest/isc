@@ -179,37 +179,75 @@ function canSubmit(type) {
   return false;
 }
 
-submitBtn.onclick = async ()=>{
+submitBtn.onclick = async () => {
   if(!user){ showLoginPopup(); return; }
-  const type = currentType;
-  if(!canSubmit(type)) return;
 
-  const name=document.getElementById('name').value.trim();
-  const className=document.getElementById('class').value.trim();
-  const section=document.getElementById('section').value.trim();
-  const rollno=document.getElementById('rollno').value.trim();
-  const message=document.getElementById('message').value.trim();
-  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
+  const name = document.getElementById('name').value.trim();
+  const className = document.getElementById('class').value.trim();
+  const section = document.getElementById('section').value.trim();
+  const rollno = document.getElementById('rollno').value.trim();
+  const message = document.getElementById('message').value.trim();
 
-  submitBtn.disabled=true;
+  if(!name || !className || !section || !rollno || !message){ 
+    alert("Fill all fields!"); 
+    return; 
+  }
 
-  try{
-    await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',{
-      method:'POST',
-      body: JSON.stringify({name,class:className,section,rollno,message,type,email:user.email}),
-      headers:{'Content-Type':'application/json'},
-      mode:'no-cors'
+  submitBtn.disabled = true;
+
+  // Rate limiter check
+  const canSubmitResult = canSubmit(currentType, user.email);
+  if(!canSubmitResult.allowed){
+    alert(`⏳ Please wait ${canSubmitResult.timeLeft} before submitting another ${currentType}.`);
+    submitBtn.disabled = false;
+    return;
+  }
+
+  try {
+    // Send to Google Apps Script
+    const scriptResponse = await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        class: className,
+        section,
+        rollno,
+        message,
+        type: currentType,
+        email: user.email
+      }),
+      headers: {'Content-Type': 'application/json'},
+      mode: 'no-cors'
     });
 
-    alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} submitted!`);
-    localStorage.setItem(`lastSubmit_${type}`, Date.now());
-    modalBg.style.display='none';
-    ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-    if(type==='suggestion') setTimeout(loadSuggestions, 2000);
+    // Send to Firebase only if rate limit allows
+    await db.collection('submissions').add({
+      name,
+      class: className,
+      section,
+      rollno,
+      message,
+      type: currentType,
+      email: user.email,
+      upvotes: 0,
+      downvotes: 0,
+      upvoters: [],
+      downvoters: [],
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-  } catch(err){ alert("❌ Error submitting form: "+err.message); }
-  submitBtn.disabled=false;
+    alert("✅ Submitted successfully!");
+    modalBg.style.display = 'none';
+    ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value = '');
+    loadSuggestions();
+
+  } catch(err) {
+    alert("❌ Error submitting form: "+err.message);
+  }
+
+  submitBtn.disabled = false;
 };
+
 
 
 
@@ -299,6 +337,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
