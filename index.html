@@ -164,42 +164,53 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>{ modalBg.style.display='none'; }
 
+function canSubmit(type) {
+  const key = `lastSubmit_${type}`;
+  const last = localStorage.getItem(key);
+  if (!last) return true;
+
+  const now = Date.now();
+  const waitTime = type === 'complaint' ? 24*60*60*1000 : 7*24*60*60*1000; // ms
+  const elapsed = now - parseInt(last);
+
+  if (elapsed >= waitTime) return true;
+  const hoursLeft = Math.ceil((waitTime - elapsed)/3600000);
+  alert(`⏳ You must wait ${hoursLeft} hour(s) before submitting another ${type}.`);
+  return false;
+}
+
 submitBtn.onclick = async ()=>{
   if(!user){ showLoginPopup(); return; }
-  const name = document.getElementById('name').value.trim();
-  const className = document.getElementById('class').value.trim();
-  const section = document.getElementById('section').value.trim();
-  const rollno = document.getElementById('rollno').value.trim();
-  const message = document.getElementById('message').value.trim();
-  if(!name || !className || !section || !rollno || !message){ alert("Fill all fields!"); return; }
-  submitBtn.disabled = true;
+  const type = currentType;
+  if(!canSubmit(type)) return;
+
+  const name=document.getElementById('name').value.trim();
+  const className=document.getElementById('class').value.trim();
+  const section=document.getElementById('section').value.trim();
+  const rollno=document.getElementById('rollno').value.trim();
+  const message=document.getElementById('message').value.trim();
+  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
+
+  submitBtn.disabled=true;
 
   try{
-    // Send to Apps Script (email)
-    await fetch('https://script.google.com/macros/s/.../exec',{
+    await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',{
       method:'POST',
-      body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
+      body: JSON.stringify({name,class:className,section,rollno,message,type,email:user.email}),
       headers:{'Content-Type':'application/json'},
       mode:'no-cors'
     });
 
-    // Add to Firestore
-    await db.collection('submissions').add({
-      name, class: className, section, rollno: Number(rollno),
-      message, type: currentType,
-      upvotes: 0, downvotes: 0, upvoters: [], downvoters: [],
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    alert("✅ Submitted successfully!");
+    alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} submitted!`);
+    localStorage.setItem(`lastSubmit_${type}`, Date.now());
     modalBg.style.display='none';
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-    loadSuggestions();
-  } catch(err){
-    alert("❌ Error submitting form: "+err.message);
-  }
+    if(type==='suggestion') setTimeout(loadSuggestions, 2000);
+
+  } catch(err){ alert("❌ Error submitting form: "+err.message); }
   submitBtn.disabled=false;
 };
+
 
 
 async function loadSuggestions(){
@@ -288,6 +299,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
