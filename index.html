@@ -189,7 +189,10 @@ submitBtn.onclick = async ()=>{
 };
 
 async function loadSuggestions(){
-  suggestionsContainer.innerHTML='Loading...';
+  const loadingContainer = document.getElementById('loading-container');
+  loadingContainer.style.display = 'flex';
+  loadingContainer.style.display = 'none';
+
   try{
     const snapshot=await db.collection('submissions').where('type','==','suggestion').get();
     suggestionsContainer.innerHTML='';
@@ -243,6 +246,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
