@@ -184,4 +184,49 @@
     modalBg.style.display = "none";
     alert("✅ Submitted successfully!");
 
-   
+    // clear inputs
+    ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value='');
+
+    loadSubmissions();
+  }
+
+  // Load suggestions only
+  async function loadSubmissions() {
+    submissionsDiv.innerHTML = '';
+    const snapshot = await db.collection('entries').where('type','==','suggestion').orderBy('timestamp','desc').get();
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const card = document.createElement('div');
+      card.className = 'submission-card';
+      card.innerHTML = `
+        <strong>${data.name} (Class ${data.class}-${data.section}, Roll ${data.rollno})</strong>
+        <p>${data.message}</p>
+        <div class="votes">
+          <button class="upvote">⬆️</button>
+          <span class="upcount">${data.upvotes}</span>
+          <button class="downvote">⬇️</button>
+          <span class="downcount">${data.downvotes}</span>
+        </div>
+      `;
+      const up = card.querySelector('.upvote');
+      const down = card.querySelector('.downvote');
+      const upcount = card.querySelector('.upcount');
+      const downcount = card.querySelector('.downcount');
+
+      up.onclick = async () => {
+        await db.collection('entries').doc(doc.id).update({upvotes: firebase.firestore.FieldValue.increment(1)});
+        upcount.textContent = parseInt(upcount.textContent)+1;
+      }
+      down.onclick = async () => {
+        await db.collection('entries').doc(doc.id).update({downvotes: firebase.firestore.FieldValue.increment(1)});
+        downcount.textContent = parseInt(downcount.textContent)+1;
+      }
+
+      submissionsDiv.appendChild(card);
+    });
+  }
+
+  loadSubmissions();
+</script>
+</body>
+</html>
