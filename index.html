@@ -14,13 +14,13 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;color:#fff;padding-top:90px;}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition: background 1s;}
 header{
   width:100%;display:flex;justify-content:space-between;align-items:center;
-  padding:10px 20px;
-  background: linear-gradient(to bottom, rgba(17,17,17,0.9), rgba(17,17,17,0));
+  padding:10px 20px;background: linear-gradient(to bottom, rgba(17,17,17,0.9), rgba(17,17,17,0));
   position: fixed;top:0;z-index:100;transition: background 0.5s;
 }
+body{padding-top:90px;}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
 h1{text-align:center;margin:20px 0 10px 0;}
@@ -35,11 +35,11 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
 .modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
 .modal .close{background:#333;}
-#view-suggestions{text-align:center;margin:20px;cursor:pointer;color:#fff;font-weight:bold;}
-.suggestion-card{background:#222;padding:10px;margin:10px;border-radius:8px;max-width:400px;}
-.vote-btn{cursor:pointer;margin:0 5px;color:white;font-weight:bold;}
-.vote-count{margin:0 5px;}
-.rate-limiter-msg{text-align:center;color:#ff5555;margin:10px;}
+#suggestions-list{max-width:600px;margin-top:20px;width:90%;}
+.suggestion-card{background:#222;padding:15px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.suggestion-text{color:white;flex:1;margin-right:10px;}
+.vote-btn{background:none;border:none;color:white;font-weight:bold;cursor:pointer;margin-left:5px;font-size:16px;}
+.vote-count{margin-left:5px;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -59,9 +59,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
   <button id="complaint-btn">Submit Complaint</button>
 </div>
 
-<div id="view-suggestions">View Suggestions</div>
-<div id="suggestions-container"></div>
-<div class="rate-limiter-msg" id="rate-limiter-msg"></div>
+<div id="suggestions-list"></div>
 
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
@@ -73,6 +71,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;}
     <textarea id="message" rows="4" placeholder="Your message"></textarea>
     <button id="submit-btn">Submit</button>
     <button class="close" id="close-modal">Cancel</button>
+    <p id="rate-msg" style="color:#f66;margin-top:10px;"></p>
   </div>
 </div>
 
@@ -96,44 +95,51 @@ const modalBg = document.getElementById('modal-bg');
 const modalTitle = document.getElementById('modal-title');
 const submitBtn = document.getElementById('submit-btn');
 const closeModal = document.getElementById('close-modal');
-const viewSuggestions = document.getElementById('view-suggestions');
-const suggestionsContainer = document.getElementById('suggestions-container');
-const rateLimiterMsg = document.getElementById('rate-limiter-msg');
+const rateMsg = document.getElementById('rate-msg');
+const suggestionsList = document.getElementById('suggestions-list');
 
 let currentType = null;
 let user = null;
 
-// Random dark gradient
-function randomGradient(){
-  const colors = ['#1a1a1a','#2c2c2c','#111111','#0d1117','#101820','#0f1d2d','#121212'];
-  const c1 = colors[Math.floor(Math.random()*colors.length)];
-  const c2 = colors[Math.floor(Math.random()*colors.length)];
-  document.body.style.background = `linear-gradient(to bottom, ${c1}, ${c2})`;
-}
-randomGradient();
+const darkGradients = [
+  "linear-gradient(to bottom, #1a1a1a, #2c2c2c)",
+  "linear-gradient(to bottom, #0b0b1f, #1a1a3c)",
+  "linear-gradient(to bottom, #001a00, #003300)",
+  "linear-gradient(to bottom, #1a001a, #3c003c)"
+];
+document.body.style.background = darkGradients[Math.floor(Math.random()*darkGradients.length)];
 
-// Login
 loginBtn.onclick = () => {
   if(!user){
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(res => { user=res.user; loginBtn.textContent="Logout"; });
-  } else { auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; }); }
+    auth.signInWithPopup(provider).then(res => { user=res.user; loginBtn.textContent="Logout"; loadSuggestions(); });
+  } else {
+    auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; });
+  }
 };
-auth.onAuthStateChanged(u => { user=u; loginBtn.textContent=user?"Logout":"Sign in with Google"; });
+auth.onAuthStateChanged(u => { user=u; loginBtn.textContent=user?"Logout":"Sign in with Google"; loadSuggestions(); });
 
-// Show login popup
 function showLoginPopup(){
   const popup = document.createElement('div');
-  popup.style.position='fixed';popup.style.top='50%';popup.style.left='50%';popup.style.transform='translate(-50%,-50%)';
-  popup.style.background='#111';popup.style.padding='20px';popup.style.borderRadius='10px';
-  popup.style.zIndex='10000';popup.style.textAlign='center';popup.style.color='white';
+  popup.style.position='fixed';
+  popup.style.top='50%';
+  popup.style.left='50%';
+  popup.style.transform='translate(-50%,-50%)';
+  popup.style.background='#111';
+  popup.style.padding='20px';
+  popup.style.borderRadius='10px';
+  popup.style.zIndex='10000';
+  popup.style.textAlign='center';
+  popup.style.color='white';
   popup.textContent="Please sign in first!";
-  const okBtn=document.createElement('button'); okBtn.textContent="OK"; okBtn.style.marginTop='10px';
+  const okBtn=document.createElement('button');
+  okBtn.textContent="OK";
+  okBtn.style.marginTop='10px';
   okBtn.onclick=()=>document.body.removeChild(popup);
-  popup.appendChild(okBtn); document.body.appendChild(popup);
+  popup.appendChild(okBtn);
+  document.body.appendChild(popup);
 }
 
-// Modal open
 function openModal(type){
   if(!user){ showLoginPopup(); return; }
   currentType=type;
@@ -143,27 +149,8 @@ function openModal(type){
 
 suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
-closeModal.onclick = ()=>{ modalBg.style.display='none'; }
+closeModal.onclick = ()=>{ modalBg.style.display='none'; rateMsg.textContent=''; }
 
-// Rate limiter state (temporary local)
-let limiter = {}; // {email: timestamp}
-function checkRateLimit(email,type){
-   if(email === "fahdraahim@gmail.com") {
-    rateLimiterMsg.textContent = '';
-    return true;
-  }
-  const now = Date.now();
-  const key = email+'-'+type;
-  if(limiter[key] && now - limiter[key] < (type==='suggestion'?7*24*60*60*1000:24*60*60*1000)){
-    const left = type==='suggestion'?Math.ceil((7*24*60*60*1000-(now-limiter[key]))/3600000):Math.ceil((24*60*60*1000-(now-limiter[key]))/3600000);
-    rateLimiterMsg.textContent=`Rate limited! Try again in ${left} hours.`;
-    return false;
-  }
-  rateLimiterMsg.textContent='';
-  return true;
-}
-
-// Submit
 submitBtn.onclick = async ()=>{
   if(!user){ showLoginPopup(); return; }
   const name=document.getElementById('name').value.trim();
@@ -172,59 +159,93 @@ submitBtn.onclick = async ()=>{
   const rollno=document.getElementById('rollno').value.trim();
   const message=document.getElementById('message').value.trim();
   if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
-  if(!checkRateLimit(user.email,currentType)) return;
+
   submitBtn.disabled=true;
+  rateMsg.textContent='';
+  const userEmail = user.email;
+
+  // Rate limiter example: exclude owner
+  if(userEmail!=="fahdraahim@gmail.com"){
+    const lastSub = await db.collection("submissions")
+      .where("email","==",userEmail)
+      .where("type","==",currentType)
+      .orderBy("timestamp","desc")
+      .limit(1).get();
+    if(!lastSub.empty){
+      const diff = (Date.now()-lastSub.docs[0].data().timestamp)/1000;
+      if(diff<60){
+        rateMsg.textContent=`You are rate limited. Wait ${Math.ceil(60-diff)}s`;
+        submitBtn.disabled=false; return;
+      }
+    }
+  }
+
   try{
-    fetch('https://script.google.com/macros/s/AKfycbzqhVg9fmBAd9F8XyUrzdC5WonSp8T_5kAr7WM3Dj8-9zjLD3ghOrce-_3X2MqgxWmB/exec',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
-      mode:'no-cors'
+    await db.collection("submissions").add({
+      name,class:className,section,rollno,message,type:currentType,email:userEmail,
+      timestamp:Date.now(),upvotes:0,downvotes:0,votes:{}
     });
-    limiter[user.email+'-'+currentType]=Date.now();
-    alert("✅ Submitted successfully!");
     modalBg.style.display='none';
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
+    loadSuggestions();
   } catch(err){ alert("❌ Error submitting form: "+err.message); }
   submitBtn.disabled=false;
 };
 
-// View suggestions
-viewSuggestions.onclick = async ()=>{
-  suggestionsContainer.innerHTML='';
-  const snapshot = await db.collection('submissions').where('type','==','suggestion').get();
-  snapshot.forEach(doc=>{
+// Load suggestions
+async function loadSuggestions(){
+  suggestionsList.innerHTML='';
+  if(!user) return;
+  const query = await db.collection("submissions").where("type","==","suggestion").orderBy("timestamp","desc").get();
+  query.forEach(doc=>{
     const data = doc.data();
-    const card = document.createElement('div'); card.className='suggestion-card';
-    card.innerHTML=`<p>${data.message}</p>
-      <div>
-        <span class="vote-btn" onclick="vote('${doc.id}','up')">⬆️</span>
-        <span class="vote-count" id="up-${doc.id}">${data.upvotes||0}</span>
-        <span class="vote-btn" onclick="vote('${doc.id}','down')">⬇️</span>
-        <span class="vote-count" id="down-${doc.id}">${data.downvotes||0}</span>
-      </div>`;
-    suggestionsContainer.appendChild(card);
-  });
-};
+    const card = document.createElement('div');
+    card.className='suggestion-card';
+    const text = document.createElement('div');
+    text.className='suggestion-text';
+    text.textContent=data.message;
+    card.appendChild(text);
 
-// Vote logic
-async function vote(id,type){
-  if(!user){ showLoginPopup(); return; }
-  const docRef = db.collection('submissions').doc(id);
-  await db.runTransaction(async t=>{
-    const doc = await t.get(docRef);
-    const votes = doc.data().votes||{};
-    if(votes[user.uid]) return; // already voted
-    votes[user.uid]=type;
-    const up = Object.values(votes).filter(v=>'up'===v).length;
-    const down = Object.values(votes).filter(v=>'down'===v).length;
-    t.update(docRef,{votes,votes_up:up,votes_down:down,upvotes:up,downvotes:down});
-    document.getElementById('up-'+id).textContent=up;
-    document.getElementById('down-'+id).textContent=down;
+    const upBtn = document.createElement('button');
+    upBtn.className='vote-btn';
+    upBtn.textContent='⬆';
+    const downBtn = document.createElement('button');
+    downBtn.className='vote-btn';
+    downBtn.textContent='⬇';
+
+    const upCount = document.createElement('span');
+    upCount.className='vote-count';
+    upCount.textContent=data.upvotes||0;
+    const downCount = document.createElement('span');
+    downCount.className='vote-count';
+    downCount.textContent=data.downvotes||0;
+
+    upBtn.onclick = async ()=>{
+      const votes = data.votes||{};
+      if(votes[user.uid]==1) return;
+      if(votes[user.uid]==-1){ data.downvotes--; votes[user.uid]=1; data.upvotes++; }
+      else { votes[user.uid]=1; data.upvotes++; }
+      await db.collection("submissions").doc(doc.id).update({upvotes:data.upvotes,downvotes:data.downvotes,votes});
+      loadSuggestions();
+    };
+    downBtn.onclick = async ()=>{
+      const votes = data.votes||{};
+      if(votes[user.uid]==-1) return;
+      if(votes[user.uid]==1){ data.upvotes--; votes[user.uid]=-1; data.downvotes++; }
+      else { votes[user.uid]=-1; data.downvotes++; }
+      await db.collection("submissions").doc(doc.id).update({upvotes:data.upvotes,downvotes:data.downvotes,votes});
+      loadSuggestions();
+    };
+
+    card.appendChild(upBtn);
+    card.appendChild(upCount);
+    card.appendChild(downBtn);
+    card.appendChild(downCount);
+
+    suggestionsList.appendChild(card);
   });
 }
 </script>
 
 </body>
 </html>
-
