@@ -120,6 +120,8 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;f
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+
 const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
     authDomain: "ibn-e-sina-school.firebaseapp.com",
@@ -129,10 +131,11 @@ const firebaseConfig = {
     appId: "1:897865466373:web:107271a0b6b9e7fd36126c"
 };
 firebase.initializeApp(firebaseConfig);
-firebase.performance();
+const perf = firebase.performance();
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Elements
 const loginBtn = document.getElementById('login-btn');
 const emailLoginBtn = document.getElementById('email-login-btn');
 const suggestionBtn = document.getElementById('suggestion-btn');
@@ -170,6 +173,7 @@ function showToast(msg){
 }
 function sanitize(str){ const temp=document.createElement('div'); temp.textContent=str; return temp.innerHTML; }
 
+// --- Login & Logout ---
 loginBtn.onclick = async () => {
   if(!user){
     try{
@@ -196,6 +200,7 @@ togglePassword.onclick = ()=>{ passwordInput.type=passwordInput.type==='password
 emailCloseBtn.onclick = ()=>emailModal.classList.remove('show');
 emailModal.onclick = e=>{ if(e.target===emailModal) emailModal.classList.remove('show'); };
 
+// Auth state
 auth.onAuthStateChanged(u=>{
   user = u && u.emailVerified ? u : null;
   loginBtn.textContent = user?"Logout":"Sign in with Google";
@@ -203,6 +208,7 @@ auth.onAuthStateChanged(u=>{
   if(user) loadSuggestions();
 });
 
+// --- Modals ---
 function openModal(type){
   if(!user){ showToast("Please sign in first!"); return; }
   currentType=type;
@@ -214,6 +220,7 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>modalBg.classList.remove('show');
 
+// --- Submit ---
 submitBtn.onclick = async () => {
   if(!user){ showToast("Please sign in first!"); return; }
 
@@ -252,12 +259,12 @@ submitBtn.onclick = async () => {
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     showToast("✅ Submitted successfully!");
     confetti({particleCount:100, spread:70, origin:{y:0.6}});
-
     await loadSuggestions();
   }catch(err){ showToast("❌ "+err.message);}
   finally{submitBtn.disabled=false; hideLoading();}
 };
 
+// --- Load & Render Suggestions ---
 async function loadSuggestions(page=0){
   if(!user){ suggestionsContainer.innerHTML='Please sign in to see suggestions.'; return; }
   showLoading();
@@ -328,7 +335,7 @@ function renderSuggestions(){
 
 searchInput.addEventListener('input',()=>{ currentPage=0; renderSuggestions(); });
 
-// Email login / signup
+// --- Email Login ---
 emailSubmitBtn.onclick=async ()=>{
   const email = emailInput.value.trim();
   const pass = passwordInput.value.trim();
@@ -359,7 +366,7 @@ emailSubmitBtn.onclick=async ()=>{
   finally{hideLoading();}
 };
 
-// Password reset
+// --- Password reset ---
 resetPasswordBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
   if(!email){ showToast("Enter your email first"); return; }
@@ -374,6 +381,7 @@ resetPasswordBtn.onclick=async ()=>{
   finally{hideLoading();}
 };
 
+});
 </script>
 
 <footer id="footer">
