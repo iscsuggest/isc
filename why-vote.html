@@ -29,28 +29,34 @@
     }
 
     .nav-link {
-      color: white; 
-      text-decoration: none; 
-      font-size: 18px; 
-      margin-top: 30px; 
-      position: relative;
-      display: inline-block;
-    }
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  padding: 6px 8px;
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+  font-weight: 500;
+}
 
-    .nav-link::after {
-      content: "";
-      position: absolute;
-      width: 0;
-      height: 2px;
-      display: block;
-      margin-top: 5px;
-      right: 0;
-      background: white;
-      transition: width 0.3s ease;
-      -webkit-transition: width 0.3s ease;
-    }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 2px;
+  background: #6a0dad; /* purple underline */
+  bottom: -6px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left; /* always from left */
+  transition: transform 0.28s ease;
+}
 
-    .nav-link:hover::after {width: 100%; left: 0; background: white;}
+.nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left; /* stays left */
+}
+
   </style>
 </head>
 <body>
