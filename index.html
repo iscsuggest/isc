@@ -66,7 +66,23 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
   <div id="loading-container" class="loading-container" style="display:none;">
   <span style="color:white;">Loading...</span>
 </div>
+//start
 
+  <html>
+  <head>
+    <title>reCAPTCHA demo: Simple page</title>
+    <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+  </head>
+  <body>
+    <form action="" method="POST">
+      <div class="g-recaptcha" data-sitekey="6LeF68grAAAAAExc7Q242JOXNbLZFmnHP8GcCsnT" data-action="LOGIN"></div>
+      <br/>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
+
+  //end
 
 <div id="suggestions-container"></div>
 
@@ -337,6 +353,7 @@ async function loadSuggestions(){
 
 </body>
 </html>
+
 
 
 
