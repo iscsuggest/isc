@@ -171,7 +171,6 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;}
 </div>
 
 <script>
-  
 const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
     authDomain: "ibn-e-sina-school.firebaseapp.com",
@@ -279,9 +278,7 @@ submitBtn.onclick = async () => {
   }
 
   submitBtn.disabled = true;
-  showLoading(); // show spinner immediately
-
-  // allow the browser to paint spinner
+  showLoading();
   await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
@@ -327,7 +324,6 @@ submitBtn.onclick = async () => {
   finally{ submitBtn.disabled=false; hideLoading(); }
 };
 
-
 async function loadSuggestions(){
   if(!user){ suggestionsContainer.innerHTML='Please sign in to see suggestions.'; return; }
   suggestionsContainer.innerHTML='Loading...';
@@ -347,8 +343,65 @@ async function loadSuggestions(){
       </div>`;
       const upBtn=card.querySelector('.upvote');
       const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async()=>{ if(!user){ showToast("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      downBtn.onclick=async()=>{ if(!user){ showToast("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      const docRef=db.collection('submissions').doc(doc.id);
+
+      // ✅ Updated vote logic
+      upBtn.onclick=async()=>{
+        if(!user){ showToast("Sign in first!"); return;}
+        const snap=await docRef.get(); const d=snap.data();
+
+        if((d.upvoters||[]).includes(user.uid)){
+          await docRef.update({
+            upvotes:(d.upvotes||0)-1,
+            upvoters:firebase.firestore.FieldValue.arrayRemove(user.uid)
+          });
+          showToast("❌ Upvote removed");
+        }else if((d.downvoters||[]).includes(user.uid)){
+          await docRef.update({
+            downvotes:(d.downvotes||0)-1,
+            upvotes:(d.upvotes||0)+1,
+            downvoters:firebase.firestore.FieldValue.arrayRemove(user.uid),
+            upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
+          });
+          showToast("✅ Switched to upvote");
+        }else{
+          await docRef.update({
+            upvotes:(d.upvotes||0)+1,
+            upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
+          });
+          showToast("✅ Successful upvote");
+        }
+        loadSuggestions();
+      };
+
+      downBtn.onclick=async()=>{
+        if(!user){ showToast("Sign in first!"); return;}
+        const snap=await docRef.get(); const d=snap.data();
+
+        if((d.downvoters||[]).includes(user.uid)){
+          await docRef.update({
+            downvotes:(d.downvotes||0)-1,
+            downvoters:firebase.firestore.FieldValue.arrayRemove(user.uid)
+          });
+          showToast("❌ Downvote removed");
+        }else if((d.upvoters||[]).includes(user.uid)){
+          await docRef.update({
+            upvotes:(d.upvotes||0)-1,
+            downvotes:(d.downvotes||0)+1,
+            upvoters:firebase.firestore.FieldValue.arrayRemove(user.uid),
+            downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
+          });
+          showToast("✅ Switched to downvote");
+        }else{
+          await docRef.update({
+            downvotes:(d.downvotes||0)+1,
+            downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
+          });
+          showToast("✅ Successful downvote");
+        }
+        loadSuggestions();
+      };
+
       suggestionsContainer.appendChild(card);
     });
   }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions'; }
@@ -401,6 +454,7 @@ resetPasswordBtn.onclick=async ()=>{
 };
 </script>
 
+
 <footer id="footer">
   Made by Raahim Fahd, 9 Green, 
   <a href="https://github.com/iscsuggest/isc" target="_blank">Source code</a>
@@ -410,6 +464,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
