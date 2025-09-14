@@ -39,6 +39,26 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 #suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;text-align: center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
 #toggle-password{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:20px;}
+  #footer {
+  position: fixed;
+  bottom: 10px;
+  right: 20px;
+  color: white;
+  font-size: 14px;
+  text-align: right;
+  z-index: 100;
+}
+#footer a {
+  color: #6a0dad;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+#footer a:hover {
+  color: #8b2ecc;
+  text-decoration: underline;
+}
+
 </style>
 </head>
 <body>
@@ -288,4 +308,5 @@ resetPasswordBtn.onclick=async ()=>{
   
 </body>
 </html>
+
 
