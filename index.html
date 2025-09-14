@@ -14,11 +14,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;}
-header{
-  width:100%;display:flex;justify-content:space-between;align-items:center;
-  padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));
-  position:fixed;top:0;z-index:100;transition:background 0.5s;
-}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));position:fixed;top:0;z-index:100;transition:background 0.5s;}
 body{padding-top:90px;}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
@@ -32,16 +28,9 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
 .actions button:hover{background:#8b2ecc;}
 .loading-container {display: flex;justify-content: center;margin-top: 20px;}
-.modal-bg, .popup {
-  display:none; position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.8);justify-content:center;align-items:center;
-  opacity:0; transform: scale(0.8); transition: all 0.3s ease; z-index:1000;
-}
+.modal-bg, .popup {display:none; position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;opacity:0; transform: scale(0.8); transition: all 0.3s ease; z-index:1000;}
 .modal-bg.show, .popup.show {display:flex; opacity:1; transform:scale(1);}
-.modal, .popup-content{
-  background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;
-  display:flex;flex-direction:column;gap:15px;color:white;text-align:center;
-}
+.modal, .popup-content{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
 .modal input,.popup-content input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button,.popup-content button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
 .modal button:hover,.popup-content button:hover{background:#8b2ecc;}
@@ -51,6 +40,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .vote-count{color:white;font-weight:bold;}
 #suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;text-align: center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
+#toggle-password{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:20px;}
 </style>
 </head>
 <body>
@@ -100,9 +90,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
     <input type="email" id="email-input" placeholder="Email">
     <div style="position: relative;">
       <input type="password" id="password-input" placeholder="Password">
-      <span id="toggle-password" style="
-          position:absolute; right:10px; top:50%;
-          transform:translateY(-50%); cursor:pointer; font-size:18px;">👁️</span>
+      <span id="toggle-password">👁️</span>
     </div>
     <button id="email-submit-btn">Login</button>
     <button id="reset-password-btn" style="background:#555;">Reset Password</button>
@@ -146,12 +134,7 @@ let user = null;
 
 // Gradient background
 function getRandomGradient(){
-  const darks=[
-    'linear-gradient(to bottom,#1a1a1a,#2c2c2c)',
-    'linear-gradient(to bottom,#0d0d2c,#1a1a4d)',
-    'linear-gradient(to bottom,#1a1a1a,#003300)',
-    'linear-gradient(to bottom,#111111,#220022)'
-  ];
+  const darks=['linear-gradient(to bottom,#1a1a1a,#2c2c2c)','linear-gradient(to bottom,#0d0d2c,#1a1a4d)','linear-gradient(to bottom,#1a1a1a,#003300)','linear-gradient(to bottom,#111111,#220022)'];
   return darks[Math.floor(Math.random()*darks.length)];
 }
 document.body.style.background=getRandomGradient();
@@ -160,29 +143,34 @@ document.body.style.background=getRandomGradient();
 loginBtn.onclick = () => {
   if(!user){
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(res => { user=res.user; loginBtn.textContent="Logout"; emailLoginBtn.style.display='none'; loadSuggestions(); });
+    auth.signInWithPopup(provider).then(res => { 
+      user=res.user; 
+      loginBtn.textContent="Logout"; 
+      emailLoginBtn.style.display='none'; 
+      loadSuggestions(); 
+    });
   } else {
-    auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; emailLoginBtn.style.display='inline-block'; });
+    auth.signOut().then(()=>{ 
+      user=null; 
+      loginBtn.textContent="Sign in with Google"; 
+      emailLoginBtn.style.display='inline-block'; 
+    });
   }
 };
 
 // Email login popup
-emailLoginBtn.onclick = () => {
-  emailModal.classList.add('show');
-  emailInput.value='';
-  passwordInput.value='';
-};
+emailLoginBtn.onclick = () => { emailModal.classList.add('show'); emailInput.value=''; passwordInput.value=''; };
 
 // Toggle password visibility
 togglePassword.onclick = () => { passwordInput.type = passwordInput.type==='password'?'text':'password'; };
 emailCloseBtn.onclick = () => emailModal.classList.remove('show');
-emailModal.onclick = e => { if(e.target === emailModal) emailModal.classList.remove('show'); };
+emailModal.onclick = e => { if(e.target===emailModal) emailModal.classList.remove('show'); };
 
 // Auth state
 auth.onAuthStateChanged(u => { 
-  user=u; 
-  loginBtn.textContent=user?"Logout":"Sign in with Google"; 
-  emailLoginBtn.style.display=user?'none':'inline-block';
+  user = u && u.emailVerified ? u : null; 
+  loginBtn.textContent = user ? "Logout" : "Sign in with Google"; 
+  emailLoginBtn.style.display = user ? 'none' : 'inline-block';
   if(user) loadSuggestions();
 });
 
@@ -211,150 +199,122 @@ function showLoginPopup(msg="Please sign in first!"){
 }
 
 // Suggestion/complaint popup
-function openModal(type){
-  if(!user){ showLoginPopup(); return; }
-  currentType=type;
-  modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";
-  modalBg.classList.add('show');
-}
+function openModal(type){if(!user){ showLoginPopup(); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
 suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>{ modalBg.classList.remove('show'); };
 
-// Rate limit function
-function canSubmit(type) {
-  const key = `lastSubmit_${type}`;
-  const last = localStorage.getItem(key);
-  if (!last) return true;
-  const now = Date.now();
-  const waitTime = type === 'complaint' ? 24*60*60*1000 : 7*24*60*60*1000;
-  const elapsed = now - parseInt(last);
-  if (elapsed >= waitTime) return true;
-  const hoursLeft = Math.ceil((waitTime - elapsed)/3600000);
-  alert(`⏳ You must wait ${hoursLeft} hour(s) before submitting another ${type}.`);
-  return false;
-}
-
-// Submit suggestion/complaint
+// Rate-limited submit function
 submitBtn.onclick = async () => {
   if(!user){ showLoginPopup(); return; }
-  const name = document.getElementById('name').value.trim();
-  const className = document.getElementById('class').value.trim();
-  const section = document.getElementById('section').value.trim();
-  const rollno = document.getElementById('rollno').value.trim();
-  const message = document.getElementById('message').value.trim();
-  if(!name || !className || !section || !rollno || !message){ alert("Fill all fields!"); return; }
+
+  const name=document.getElementById('name').value.trim();
+  const className=document.getElementById('class').value.trim();
+  const section=document.getElementById('section').value.trim();
+  const rollno=document.getElementById('rollno').value.trim();
+  const message=document.getElementById('message').value.trim();
+
+  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
 
   const key = `${user.email}_${currentType}`;
   const lastTime = localStorage.getItem(key);
   const now = Date.now();
-  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000;
-  if(lastTime && now - parseInt(lastTime) < limit){
-    const msLeft = limit - (now - parseInt(lastTime));
-    const hours = Math.floor(msLeft / (1000*60*60));
-    const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
+  const limit = currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
+  if(lastTime && now-parseInt(lastTime)<limit){
+    const msLeft = limit-(now-parseInt(lastTime));
+    const hours = Math.floor(msLeft/(1000*60*60));
+    const minutes = Math.floor((msLeft%(1000*60*60))/(1000*60));
     alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
     return;
   }
 
-  submitBtn.disabled = true;
+  submitBtn.disabled=true;
+
   try{
-    // Send to Google Apps Script
     await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
       method:'POST',
       body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
       headers:{'Content-Type':'application/json'},
       mode:'no-cors'
     });
+
     localStorage.setItem(key, Date.now());
 
     await db.collection('submissions').add({
-      name, class: className, section, rollno, message, type: currentType, email: user.email,
-      upvotes:0, downvotes:0, upvoters:[], downvoters:[], timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      name,class:className,section,rollno,message,type:currentType,email:user.email,
+      upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
 
     alert("✅ Submitted successfully!");
     modalBg.classList.remove('show');
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     loadSuggestions();
-  }catch(err){ alert("❌ Error submitting form: "+err.message);}
+  } catch(err){ alert("❌ Error: "+err.message);}
   submitBtn.disabled=false;
 };
 
 // Load suggestions
 async function loadSuggestions(){
+  if(!user){ suggestionsContainer.innerHTML='Please sign in to see suggestions.'; return; }
   suggestionsContainer.innerHTML='Loading...';
   try{
-    const snapshot = await db.collection('submissions').where('type','==','suggestion').get();
+    const snapshot=await db.collection('submissions').where('type','==','suggestion').get();
     suggestionsContainer.innerHTML='';
     snapshot.forEach(doc=>{
       const data=doc.data();
       const card=document.createElement('div');
       card.className='suggestion-card';
       card.innerHTML=`<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
-        <div class="vote-container">
-          <button class="vote-btn upvote">⬆</button>
-          <span class="vote-count">${data.upvotes||0}</span>
-          <button class="vote-btn downvote">⬇</button>
-          <span class="vote-count">${data.downvotes||0}</span>
-        </div>`;
+      <div class="vote-container">
+        <button class="vote-btn upvote">⬆</button>
+        <span class="vote-count">${data.upvotes||0}</span>
+        <button class="vote-btn downvote">⬇</button>
+        <span class="vote-count">${data.downvotes||0}</span>
+      </div>`;
       const upBtn=card.querySelector('.upvote');
       const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async ()=>{
-        if(!user){ showLoginPopup(); return; }
-        const userId=user.uid;
-        const docRef=db.collection('submissions').doc(doc.id);
-        const upvoters=data.upvoters||[];
-        const downvoters=data.downvoters||[];
-        if(upvoters.includes(userId)||downvoters.includes(userId)) return;
-        await docRef.update({upvotes:(data.upvotes||0)+1, upvoters:firebase.firestore.FieldValue.arrayUnion(userId)});
-        loadSuggestions();
-      };
-      downBtn.onclick=async ()=>{
-        if(!user){ showLoginPopup(); return; }
-        const userId=user.uid;
-        const docRef=db.collection('submissions').doc(doc.id);
-        const upvoters=data.upvoters||[];
-        const downvoters=data.downvoters||[];
-        if(upvoters.includes(userId)||downvoters.includes(userId)) return;
-        await docRef.update({downvotes:(data.downvotes||0)+1, downvoters:firebase.firestore.FieldValue.arrayUnion(userId)});
-        loadSuggestions();
-      };
+      upBtn.onclick=async ()=>{ if(!user){ showLoginPopup(); return;} const docRef=db.collection('submissions').doc(doc.id); const upvoters=data.upvoters||[]; const downvoters=data.downvoters||[]; if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      downBtn.onclick=async ()=>{ if(!user){ showLoginPopup(); return;} const docRef=db.collection('submissions').doc(doc.id); const upvoters=data.upvoters||[]; const downvoters=data.downvoters||[]; if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
       suggestionsContainer.appendChild(card);
     });
   }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions'; }
 }
 
-// Email login submit
-emailSubmitBtn.onclick = async ()=>{
-  const email = emailInput.value.trim();
-  const pass = passwordInput.value.trim();
+// Email login strict verification
+emailSubmitBtn.onclick=async ()=>{
+  const email=emailInput.value.trim();
+  const pass=passwordInput.value.trim();
   if(!email||!pass){ alert("Fill both fields"); return; }
   try{
     const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
     if(!cred.user.emailVerified){
       alert("⚠️ Email not verified. Check inbox/junk folder.");
       await cred.user.sendEmailVerification();
+      await auth.signOut();
+      user=null;
       return;
     }
+    user=cred.user;
     alert("✅ Logged in successfully!");
     emailModal.classList.remove('show');
     emailLoginBtn.style.display='none';
     loginBtn.textContent='Logout';
-  }catch(err){ alert("❌ "+err.message);}
+    loadSuggestions();
+  }catch(err){ alert("❌ "+err.message); await auth.signOut(); user=null; }
 };
 
 // Password reset
-resetPasswordBtn.onclick = async ()=>{
-  const email = emailInput.value.trim();
+resetPasswordBtn.onclick=async ()=>{
+  const email=emailInput.value.trim();
   if(!email){ alert("Enter email first"); return; }
   try{
-    await firebase.auth().sendPasswordResetEmail(email);
+    await auth.sendPasswordResetEmail(email);
     alert("📧 Password reset email sent. Check inbox/junk and sign in again.");
     emailModal.classList.remove('show');
+    await auth.signOut();
+    user=null;
   }catch(err){ alert("❌ "+err.message);}
 };
 </script>
-
 </body>
 </html>
