@@ -190,21 +190,28 @@ submitBtn.onclick = async () => {
 
   if (!name || !className || !section || !rollno || !message) { alert("Fill all fields!"); return; }
 
-  // --- Check for profanity using vector.profanity.dev API ---
-  try {
-    const response = await fetch('https://vector.profanity.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
+  // --- Check all fields for profanity ---
+  const fields = { name, className, section, rollno, message };
 
-    const data = await response.json();
-    if (data.hasProfanity) {
-      alert("⚠️ Your message contains inappropriate language. Please remove it before submitting.");
-      return;
+  for (const [key, value] of Object.entries(fields)) {
+    try {
+      const response = await fetch('https://vector.profanity.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: value })
+      });
+      const data = await response.json();
+
+      // API returns a score, block if > 0.9
+      if (data.score && data.score > 0.9) {
+        alert(`⚠️ Your ${key} contains inappropriate words. Please remove them.`);
+        return;
+      }
+
+    } catch (err) {
+      console.warn(`Profanity check failed for ${key}:`, err);
+      // optionally let it pass if API fails, or block; here we continue
     }
-  } catch (err) {
-    console.warn("Profanity check failed, proceeding anyway:", err);
   }
 
   const key = `${user.email}_${currentType}`;
@@ -260,6 +267,7 @@ submitBtn.onclick = async () => {
     document.getElementById('loading-container').style.display = 'none';
   }
 };
+
 
 
 async function loadSuggestions(){
@@ -338,4 +346,5 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
