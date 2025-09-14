@@ -76,16 +76,21 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;}
 .nav-link::after {
   content: "";
   position: absolute;
-  left: 0; /* underline starts at the left edge */
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   height: 2px;
-  width: 0;
   background: #6a0dad; /* purple underline */
   bottom: -6px;
-  transition: width 0.28s ease;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left; /* starts scaling from the left */
+  transition: transform 0.28s ease;
 }
 
 .nav-link:hover::after {
-  width: 100%; /* expands left → right */
+  transform: scaleX(1);
+  transform-origin: right; /* shrinks back toward the right on exit */
 }
 
 .header-right{flex:0 0 auto;display:flex;gap:8px;align-items:center;}
@@ -406,6 +411,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
