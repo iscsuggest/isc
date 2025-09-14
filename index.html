@@ -36,6 +36,10 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;f
 .vote-container{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px;}
 .vote-btn{cursor:pointer;background:#444;border:none;padding:5px 10px;border-radius:5px;color:white;}
 .vote-count{color:white;font-weight:bold;}
+#toast-container {position: fixed;top: 20px;right: 20px;display: flex;flex-direction: column;gap: 10px;z-index: 3000;}
+.toast {background: #333;color: white;padding: 12px 20px;border-radius: 8px;box-shadow: 0 2px 10px rgba(0,0,0,0.3);opacity: 0;transform: translateX(100px);animation: slideIn 0.5s forwards, fadeOut 0.5s 3s forwards;}
+@keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(100px); } }
 #suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;text-align: center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
 #toggle-password{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:20px;}
@@ -51,6 +55,7 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;f
 </style>
 </head>
 <body>
+
 
 <header>
   <img src="images/image.png" alt="Ibn-e-Sina Logo">
@@ -143,8 +148,15 @@ document.body.style.background='linear-gradient(to bottom,#1a1a1a,#2c2c2c)';
 
 function showLoading(){loadingOverlay.classList.add('show');}
 function hideLoading(){loadingOverlay.classList.remove('show');}
-  
 
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.getElementById('toast-container').appendChild(toast);
+  setTimeout(() => toast.remove(), 4000); // remove after 4s
+}
+  
 loginBtn.onclick = async () => {
   if(!user){
     try{
@@ -155,7 +167,7 @@ loginBtn.onclick = async () => {
       loginBtn.textContent="Logout";
       emailLoginBtn.style.display='none';
       await loadSuggestions();
-    }catch(err){ alert(err.message);}
+    }catch(err){ showToast(err.message);}
     finally{hideLoading();}
   }else{
     await auth.signOut();
@@ -177,13 +189,13 @@ auth.onAuthStateChanged(u=>{
   if(user) loadSuggestions();
 });
 
-function openModal(type){ if(!user){ alert("Please sign in first!"); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
+function openModal(type){ if(!user){ showToast("Please sign in first!"); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
 suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>modalBg.classList.remove('show');
 
 submitBtn.onclick = async () => {
-  if (!user) { alert("Please sign in first!"); return; }
+  if (!user) { showToast("Please sign in first!"); return; }
 
   const name = document.getElementById('name').value.trim();
   const className = document.getElementById('class').value.trim();
@@ -191,7 +203,7 @@ submitBtn.onclick = async () => {
   const rollno = document.getElementById('rollno').value.trim();
   const message = document.getElementById('message').value.trim();
 
-  if (!name || !className || !section || !rollno || !message) { alert("Fill all fields!"); return; }
+  if (!name || !className || !section || !rollno || !message) { showToast("Fill all fields!"); return; }
 
   const key = `${user.email}_${currentType}`;
   const lastTime = localStorage.getItem(key);
@@ -201,7 +213,7 @@ submitBtn.onclick = async () => {
     const msLeft = limit - (now - parseInt(lastTime));
     const hours = Math.floor(msLeft / (1000*60*60));
     const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
-    alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
+    showToast(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
     return;
   }
 
@@ -221,7 +233,7 @@ submitBtn.onclick = async () => {
     });
     const data = await response.json();
     if(data.score && data.score > 0.9){
-      alert("⚠️ Your message contains inappropriate words. Please remove them.");
+      showToast("⚠️ Your message contains inappropriate words. Please remove them.");
       return;
     }
 
@@ -242,7 +254,7 @@ submitBtn.onclick = async () => {
     modalBg.classList.remove('show');
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     await loadSuggestions();
-    alert("✅ Submitted successfully!");
+    showToast("✅ Submitted successfully!");
     
     confetti({
         particleCount: 150,
@@ -250,7 +262,7 @@ submitBtn.onclick = async () => {
         origin: { y: 0.6 }
     });
 
-  } catch(err){ alert("❌ "+err.message); }
+  } catch(err){ showToast("❌ "+err.message); }
   finally{ submitBtn.disabled=false; hideLoading(); }
 };
 
@@ -274,8 +286,8 @@ async function loadSuggestions(){
       </div>`;
       const upBtn=card.querySelector('.upvote');
       const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      downBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      upBtn.onclick=async()=>{ if(!user){ showToast("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      downBtn.onclick=async()=>{ if(!user){ showToast("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
       suggestionsContainer.appendChild(card);
     });
   }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions'; }
@@ -285,45 +297,45 @@ async function loadSuggestions(){
 emailSubmitBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
   const pass=passwordInput.value.trim();
-  if(!email||!pass){ alert("Fill all fields!"); return; }
+  if(!email||!pass){ showToast("Fill all fields!"); return; }
   try{
     showLoading();
     let cred;
     try{ cred = await auth.signInWithEmailAndPassword(email,pass);}catch(e){
       cred = await auth.createUserWithEmailAndPassword(email,pass);
       await cred.user.sendEmailVerification();
-      alert("✅ Account created. Please verify your email. Check inbox/junk folder.");
+      showToast("✅ Account created. Please verify your email. Check inbox/junk folder.");
       await auth.signOut();
       return;
     }
     if(!cred.user.emailVerified){
-      alert("⚠️ Email not verified. Check inbox/junk folder.");
+      showToast("⚠️ Email not verified. Check inbox/junk folder.");
       await cred.user.sendEmailVerification();
       await auth.signOut();
       return;
     }
     user=cred.user;
-    alert("✅ Logged in successfully!");
+    showToast("✅ Logged in successfully!");
     emailModal.classList.remove('show');
     loginBtn.textContent='Logout';
     emailLoginBtn.style.display='none';
     await loadSuggestions();
-  }catch(err){ alert("❌ "+err.message); await auth.signOut(); user=null; }
+  }catch(err){ showToast("❌ "+err.message); await auth.signOut(); user=null; }
   finally{hideLoading();}
 };
 
 // Password reset
 resetPasswordBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
-  if(!email){ alert("Enter your email first"); return; }
+  if(!email){ showToast("Enter your email first"); return; }
   try{
     showLoading();
     await auth.sendPasswordResetEmail(email);
-    alert("📧 Password reset email sent. Check inbox/junk folder and log in again.");
+    showToast("📧 Password reset email sent. Check inbox/junk folder and log in again.");
     await auth.signOut();
     user=null;
     emailModal.classList.remove('show');
-  }catch(err){ alert("❌ "+err.message);}
+  }catch(err){ showToast("❌ "+err.message);}
   finally{hideLoading();}
 };
 </script>
@@ -333,6 +345,9 @@ resetPasswordBtn.onclick=async ()=>{
   <a href="https://github.com/iscsuggest/isc" target="_blank">Source code</a>
 </footer>
 
+<div id="toast-container"></div>
+
 </body>
 </html>
+
 
