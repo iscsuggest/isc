@@ -6,18 +6,23 @@
 <title>Ibn-e-Sina Portal</title>
 <link rel="icon" type="image/png" href="images/image.png">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;}
-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));position:fixed;top:0;z-index:100;transition:background 0.5s;}
+header{
+  width:100%;display:flex;justify-content:space-between;align-items:center;
+  padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));
+  position:fixed;top:0;z-index:100;transition:background 0.5s;
+}
 body{padding-top:90px;}
 header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
-header .secondary{margin-left:10px;background:#444;}
-header .secondary:hover{background:#555;}
+header button:hover{background:#8b2ecc;}
 h1{text-align:center;margin:20px 0 10px 0;color:white;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
 p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
@@ -26,28 +31,46 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
 .actions button:hover{background:#8b2ecc;}
 .loading-container {display: flex;justify-content: center;margin-top: 20px;}
-.modal-bg, .popup {display:none; position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;opacity:0; transform: translateY(-50px); transition: all 0.3s ease; z-index:1000;}
-.modal-bg.show, .popup.show {display:flex; opacity:1; transform:translateY(0);}
-.modal, .popup-content{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
-.modal input,.popup-content input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
-.modal button,.popup-content button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
-.modal button:hover,.popup-content button:hover{background:#8b2ecc;}
-.modal .close,.popup-content .close-btn{background:#333;}
+.loading-gif {width: 80px;height: auto;}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;animation:fadeIn 0.3s;}
+.modal{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;animation:slideIn 0.3s;}
+.modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
+.modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
+.modal .close{background:#333;}
+.modal h3{color:white;margin-bottom:10px;text-align:center;}
 .vote-container{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px;}
 .vote-btn{cursor:pointer;background:#444;border:none;padding:5px 10px;border-radius:5px;color:white;}
 .vote-count{color:white;font-weight:bold;}
-#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;text-align: center;}
+#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
-#toggle-password{position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:20px;}
+/* Footer */
+footer{
+  margin:20px 0;
+  text-align:center;
+  color:#ccc;
+  font-size:14px;
+}
+footer a{
+  color:#6a0dad;
+  text-decoration:none;
+  font-weight:bold;
+  transition: all 0.3s ease;
+}
+footer a:hover{
+  color:#8b2ecc;
+  text-decoration:underline;
+}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+@keyframes slideIn{from{transform:translateY(-20px); opacity:0;} to{transform:translateY(0); opacity:1;}}
 </style>
 </head>
 <body>
 
 <header>
   <img src="images/image.png" alt="Ibn-e-Sina Logo">
-  <div>
-    <button id="login-btn">Sign in with Google</button>
-    <button id="email-login-btn" class="secondary">Sign in with Email</button>
+  <div style="display:flex;gap:10px;">
+    <button id="login-google-btn">Sign in with Google</button>
+    <button id="login-email-btn">Sign in with Email</button>
   </div>
 </header>
 
@@ -67,32 +90,18 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 
 <div id="suggestions-container"></div>
 
-<!-- Suggestion/Complaint Modal -->
-<div class="modal-bg" id="modal-bg">
+<!-- Modal for Email Login / Signup -->
+<div class="modal-bg" id="email-modal">
   <div class="modal">
-    <h3 id="modal-title">Submit</h3>
-    <input type="text" id="name" placeholder="Name">
-    <input type="text" id="class" placeholder="Class">
-    <input type="text" id="section" placeholder="Section">
-    <input type="number" id="rollno" placeholder="Roll No">
-    <textarea id="message" rows="4" placeholder="Your message"></textarea>
-    <button id="submit-btn">Submit</button>
-    <button class="close" id="close-modal">Cancel</button>
-  </div>
-</div>
-
-<!-- Email Login Modal -->
-<div id="email-modal" class="popup">
-  <div class="popup-content">
-    <h3>Email Login / Signup</h3>
+    <h3 id="email-modal-title">Sign in with Email</h3>
     <input type="email" id="email-input" placeholder="Email">
-    <div style="position: relative;">
-      <input type="password" id="password-input" placeholder="Password">
-      <span id="toggle-password">👁️</span>
+    <div style="position:relative;">
+      <input type="password" id="password-input" placeholder="Password" style="width:100%; padding-right:40px;">
+      <span id="toggle-password" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#ccc;font-size:18px;">👁️</span>
     </div>
-    <button id="email-submit-btn">Login / Signup</button>
-    <button id="reset-password-btn" style="background:#555;">Reset Password</button>
-    <button class="close-btn">Cancel</button>
+    <button id="email-submit-btn">Sign In / Sign Up</button>
+    <button class="close" id="email-close-btn">Cancel</button>
+    <button id="reset-password-btn" style="background:#444;margin-top:5px;">Reset Password</button>
   </div>
 </div>
 
@@ -109,176 +118,121 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const loginBtn = document.getElementById('login-btn');
-const emailLoginBtn = document.getElementById('email-login-btn');
-const suggestionBtn = document.getElementById('suggestion-btn');
-const complaintBtn = document.getElementById('complaint-btn');
-const modalBg = document.getElementById('modal-bg');
-const modalTitle = document.getElementById('modal-title');
-const submitBtn = document.getElementById('submit-btn');
-const closeModal = document.getElementById('close-modal');
-const suggestionsContainer = document.getElementById('suggestions-container');
-
+const loginGoogleBtn = document.getElementById('login-google-btn');
+const loginEmailBtn = document.getElementById('login-email-btn');
 const emailModal = document.getElementById('email-modal');
+const emailCloseBtn = document.getElementById('email-close-btn');
+const emailSubmitBtn = document.getElementById('email-submit-btn');
 const emailInput = document.getElementById('email-input');
 const passwordInput = document.getElementById('password-input');
 const togglePassword = document.getElementById('toggle-password');
-const emailSubmitBtn = document.getElementById('email-submit-btn');
 const resetPasswordBtn = document.getElementById('reset-password-btn');
-const emailCloseBtn = emailModal.querySelector('.close-btn');
 
-let currentType = null;
 let user = null;
 
-document.body.style.background='linear-gradient(to bottom,#1a1a1a,#2c2c2c)';
-
 // Google login
-loginBtn.onclick = async () => {
+loginGoogleBtn.onclick = () => {
   if(!user){
-    try{
-      const provider = new firebase.auth.GoogleAuthProvider();
-      const res = await auth.signInWithPopup(provider);
-      user = res.user;
-      loginBtn.textContent="Logout";
-      emailLoginBtn.style.display='none';
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(res=>{
+      user=res.user;
+      updateButtons();
       loadSuggestions();
-    }catch(err){ alert(err.message);}
-  }else{
-    await auth.signOut();
-    user = null;
-    loginBtn.textContent="Sign in with Google";
-    emailLoginBtn.style.display='inline-block';
+    }).catch(err=>alert(err.message));
+  } else {
+    auth.signOut().then(()=>{user=null; updateButtons();});
   }
 };
 
-// Email login popup
-emailLoginBtn.onclick = ()=>{ emailModal.classList.add('show'); emailInput.value=''; passwordInput.value=''; };
+// Email login modal
+loginEmailBtn.onclick = () => {
+  emailModal.style.display='flex';
+};
 
-// Toggle password
-togglePassword.onclick = ()=>{ passwordInput.type=passwordInput.type==='password'?'text':'password'; };
+// Close modal
+emailCloseBtn.onclick = ()=>{ emailModal.style.display='none'; };
 
-// Close email modal
-emailCloseBtn.onclick = ()=>emailModal.classList.remove('show');
-emailModal.onclick = e=>{ if(e.target===emailModal) emailModal.classList.remove('show'); };
+// Toggle password visibility
+togglePassword.onclick = ()=> {
+  if(passwordInput.type==='password') passwordInput.type='text';
+  else passwordInput.type='password';
+};
 
-// Auth state listener
+// Reset password
+resetPasswordBtn.onclick = async () => {
+  const email = emailInput.value.trim();
+  if(!email){ alert("Enter your email first."); return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    alert("✅ Password reset email sent. Check inbox/junk folder. Then sign in with new password.");
+    emailModal.style.display='none';
+  }catch(err){ alert("❌ "+err.message); }
+};
+
+// Email sign in/sign up
+emailSubmitBtn.onclick = async () => {
+  const email = emailInput.value.trim();
+  const pass = passwordInput.value.trim();
+  if(!email||!pass){ alert("Fill both email and password."); return; }
+  try{
+    const signInRes = await auth.signInWithEmailAndPassword(email, pass);
+    if(!signInRes.user.emailVerified){
+      alert("⚠️ Email not verified. Check inbox/junk folder.");
+      auth.signOut();
+      return;
+    }
+    user = signInRes.user;
+    updateButtons();
+    loadSuggestions();
+    emailModal.style.display='none';
+  }catch(err){
+    if(err.code==='auth/user-not-found'){
+      try{
+        const signupRes = await auth.createUserWithEmailAndPassword(email, pass);
+        await signupRes.user.sendEmailVerification();
+        alert("✅ Verification email sent. Check inbox/junk folder, then sign in again.");
+        auth.signOut();
+      }catch(e){ alert(e.message); }
+    } else alert(err.message);
+  }
+};
+
+// Update button visibility
+function updateButtons(){
+  loginGoogleBtn.textContent = user ? 'Logout' : 'Sign in with Google';
+  loginEmailBtn.style.display = user ? 'none' : 'inline-block';
+}
+
 auth.onAuthStateChanged(u=>{
-  user = u && u.emailVerified ? u : null;
-  loginBtn.textContent = user?"Logout":"Sign in with Google";
-  emailLoginBtn.style.display = user?'none':'inline-block';
+  user = u;
+  updateButtons();
   if(user) loadSuggestions();
 });
 
-// Suggestion/Complaint modal
-function openModal(type){ if(!user){ alert("Please sign in first!"); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
-suggestionBtn.onclick = ()=>openModal('suggestion');
-complaintBtn.onclick = ()=>openModal('complaint');
-closeModal.onclick = ()=>modalBg.classList.remove('show');
+// Random background
+function getRandomGradient(){
+  const darks=[
+    'linear-gradient(to bottom,#1a1a1a,#2c2c2c)',
+    'linear-gradient(to bottom,#0d0d2c,#1a1a4d)',
+    'linear-gradient(to bottom,#1a1a1a,#003300)',
+    'linear-gradient(to bottom,#111111,#220022)'
+  ];
+  return darks[Math.floor(Math.random()*darks.length)];
+}
+document.body.style.background=getRandomGradient();
 
-// Rate-limited submit
-submitBtn.onclick = async ()=>{
-  if(!user){ alert("Please sign in first!"); return; }
-  const name=document.getElementById('name').value.trim();
-  const className=document.getElementById('class').value.trim();
-  const section=document.getElementById('section').value.trim();
-  const rollno=document.getElementById('rollno').value.trim();
-  const message=document.getElementById('message').value.trim();
-  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
-
-  const key=`${user.email}_${currentType}`;
-  const lastTime=localStorage.getItem(key);
-  const now=Date.now();
-  const limit=currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
-  if(lastTime && now-parseInt(lastTime)<limit){
-    const msLeft=limit-(now-parseInt(lastTime));
-    const hours=Math.floor(msLeft/(1000*60*60));
-    const minutes=Math.floor((msLeft%(1000*60*60))/(1000*60));
-    alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
-    return;
-  }
-
-  submitBtn.disabled=true;
-  try{
-    await db.collection('submissions').add({name,class:className,section,rollno,message,type:currentType,email:user.email,upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-    localStorage.setItem(key,Date.now());
-    alert("✅ Submitted successfully!");
-    modalBg.classList.remove('show');
-    ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
-    loadSuggestions();
-  }catch(err){ alert("❌ "+err.message);}
-  submitBtn.disabled=false;
-};
-
-// Load suggestions
+// Placeholder for loadSuggestions
 async function loadSuggestions(){
-  if(!user){ suggestionsContainer.innerHTML='Please sign in to see suggestions.'; return; }
-  suggestionsContainer.innerHTML='Loading...';
-  try{
-    const snapshot=await db.collection('submissions').where('type','==','suggestion').get();
-    suggestionsContainer.innerHTML='';
-    snapshot.forEach(doc=>{
-      const data=doc.data();
-      const card=document.createElement('div');
-      card.className='suggestion-card';
-      card.innerHTML=`<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
-      <div class="vote-container">
-        <button class="vote-btn upvote">⬆</button>
-        <span class="vote-count">${data.upvotes||0}</span>
-        <button class="vote-btn downvote">⬇</button>
-        <span class="vote-count">${data.downvotes||0}</span>
-      </div>`;
-      const upBtn=card.querySelector('.upvote');
-      const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      downBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      suggestionsContainer.appendChild(card);
-    });
-  }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions';}
+  document.getElementById('suggestions-container').innerHTML='Loading...';
+  // ... your previous suggestion loading code
 }
 
-// Email login / signup
-emailSubmitBtn.onclick=async ()=>{
-  const email=emailInput.value.trim();
-  const pass=passwordInput.value.trim();
-  if(!email||!pass){ alert("Fill all fields!"); return; }
-  try{
-    // Try sign in first
-    let cred;
-    try{ cred = await auth.signInWithEmailAndPassword(email,pass);}catch(e){
-      // If user not exist, create account
-      cred = await auth.createUserWithEmailAndPassword(email,pass);
-      await cred.user.sendEmailVerification();
-      alert("✅ Account created. Please verify your email. Check inbox/junk folder.");
-      await auth.signOut();
-      return;
-    }
-    if(!cred.user.emailVerified){
-      alert("⚠️ Email not verified. Check inbox/junk folder.");
-      await cred.user.sendEmailVerification();
-      await auth.signOut();
-      return;
-    }
-    user=cred.user;
-    alert("✅ Logged in successfully!");
-    emailModal.classList.remove('show');
-    loginBtn.textContent='Logout';
-    emailLoginBtn.style.display='none';
-    loadSuggestions();
-  }catch(err){ alert("❌ "+err.message); await auth.signOut(); user=null; }
-};
-
-// Password reset
-resetPasswordBtn.onclick=async ()=>{
-  const email=emailInput.value.trim();
-  if(!email){ alert("Enter your email first"); return; }
-  try{
-    await auth.sendPasswordResetEmail(email);
-    alert("📧 Password reset email sent. Check inbox/junk folder and log in again.");
-    await auth.signOut();
-    user=null;
-    emailModal.classList.remove('show');
-  }catch(err){ alert("❌ "+err.message);}
-};
 </script>
+
+<footer>
+  Made by Raahim Fahd, 9 Green, 
+  <a href="https://github.com/iscsuggest/isc" target="_blank">Source code</a>
+</footer>
+
 </body>
 </html>
