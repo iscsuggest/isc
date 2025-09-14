@@ -19,8 +19,9 @@ header{
   padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));
   position:fixed;top:0;z-index:100;transition:background 0.5s;
 }
-body{padding-top:90px;}
+body{padding-top:110px;} /* increased for extra email button */
 header img{height:50px;}
+header div{display:flex;flex-direction:column;gap:10px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
 h1{text-align:center;margin:20px 0 10px 0;color:white;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
@@ -36,13 +37,11 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .modal input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
 .modal .close{background:#333;}
-  .modal h3 {
-    color: white; margin-bottom: 10px;text-align: center;}
+.modal h3{color:white;margin-bottom:10px;text-align:center;}
 .vote-container{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px;}
 .vote-btn{cursor:pointer;background:#444;border:none;padding:5px 10px;border-radius:5px;color:white;}
 .vote-count{color:white;font-weight:bold;}
-#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;
-    text-align: center;}
+#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
 </style>
 </head>
@@ -50,7 +49,10 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 
 <header>
   <img src="images/image.png" alt="Ibn-e-Sina Logo">
-  <button id="login-btn">Sign in with Google</button>
+  <div>
+    <button id="login-btn">Sign in with Google</button>
+    <button id="email-login-btn">Sign in with Email</button>
+  </div>
 </header>
 
 <img src="images/person.png" alt="Talal Mukhtar" class="profile-img">
@@ -63,13 +65,13 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
   <button id="complaint-btn">Submit Complaint</button>
 </div>
 
-  <div id="loading-container" class="loading-container" style="display:none;">
+<div id="loading-container" class="loading-container" style="display:none;">
   <span style="color:white;">Loading...</span>
 </div>
 
-
 <div id="suggestions-container"></div>
 
+<!-- Main modal for suggestions/complaints -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h3 id="modal-title">Submit</h3>
@@ -82,6 +84,21 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
     <button class="close" id="close-modal">Cancel</button>
   </div>
 </div>
+
+<!-- Email login modal -->
+<div class="modal-bg" id="email-modal">
+  <div class="modal">
+    <h3>Email Sign In / Sign Up</h3>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="email-signin">Sign In</button>
+      <button id="email-signup">Sign Up</button>
+    </div>
+    <button class="close" id="close-email-modal">Cancel</button>
+  </div>
+</div>
+
 <script>
 const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
@@ -96,6 +113,12 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const loginBtn = document.getElementById('login-btn');
+const emailLoginBtn = document.getElementById('email-login-btn');
+const emailModal = document.getElementById('email-modal');
+const closeEmailModal = document.getElementById('close-email-modal');
+const emailSigninBtn = document.getElementById('email-signin');
+const emailSignupBtn = document.getElementById('email-signup');
+
 const suggestionBtn = document.getElementById('suggestion-btn');
 const complaintBtn = document.getElementById('complaint-btn');
 const modalBg = document.getElementById('modal-bg');
@@ -118,6 +141,7 @@ function getRandomGradient(){
 }
 document.body.style.background=getRandomGradient();
 
+// Google Sign-In
 loginBtn.onclick = () => {
   if(!user){
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -126,12 +150,50 @@ loginBtn.onclick = () => {
     auth.signOut().then(()=>{ user=null; loginBtn.textContent="Sign in with Google"; });
   }
 };
+
+// Email Sign-In / Sign-Up
+emailLoginBtn.onclick = () => emailModal.style.display = 'flex';
+closeEmailModal.onclick = () => emailModal.style.display = 'none';
+
+emailSigninBtn.onclick = () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if(!email || !password){ alert("Enter email and password!"); return; }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(cred => {
+      user = cred.user;
+      loginBtn.textContent = "Logout";
+      emailModal.style.display = 'none';
+      loadSuggestions();
+      alert("✅ Logged in as " + user.email);
+    })
+    .catch(err => alert("❌ " + err.message));
+};
+
+emailSignupBtn.onclick = () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if(!email || !password){ alert("Enter email and password!"); return; }
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(cred => {
+      user = cred.user;
+      loginBtn.textContent = "Logout";
+      emailModal.style.display = 'none';
+      loadSuggestions();
+      alert("✅ Account created: " + user.email);
+    })
+    .catch(err => alert("❌ " + err.message));
+};
+
 auth.onAuthStateChanged(u => { 
   user=u; 
   loginBtn.textContent=user?"Logout":"Sign in with Google"; 
   if(user) loadSuggestions();
 });
 
+// Existing modal logic
 function showLoginPopup(){
   const popup = document.createElement('div');
   popup.style.position='fixed';
@@ -164,15 +226,14 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>{ modalBg.style.display='none'; }
 
+// Submission logic with localStorage rate limiting (unchanged)
 function canSubmit(type) {
   const key = `lastSubmit_${type}`;
   const last = localStorage.getItem(key);
   if (!last) return true;
-
   const now = Date.now();
-  const waitTime = type === 'complaint' ? 24*60*60*1000 : 7*24*60*60*1000; // ms
+  const waitTime = type === 'complaint' ? 24*60*60*1000 : 7*24*60*60*1000; 
   const elapsed = now - parseInt(last);
-
   if (elapsed >= waitTime) return true;
   const hoursLeft = Math.ceil((waitTime - elapsed)/3600000);
   alert(`⏳ You must wait ${hoursLeft} hour(s) before submitting another ${type}.`);
@@ -196,7 +257,7 @@ submitBtn.onclick = async () => {
   const key = `${user.email}_${currentType}`;
   const lastTime = localStorage.getItem(key);
   const now = Date.now();
-  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000; // ms
+  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000;
 
   if(lastTime && now - parseInt(lastTime) < limit){
     const msLeft = limit - (now - parseInt(lastTime));
@@ -209,7 +270,7 @@ submitBtn.onclick = async () => {
   submitBtn.disabled = true;
 
   try{
-    // Send to Google Apps Script
+    // Google Apps Script
     await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
       method:'POST',
       body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
@@ -217,10 +278,8 @@ submitBtn.onclick = async () => {
       mode:'no-cors'
     });
 
-    // Mark submission timestamp
     localStorage.setItem(key, Date.now());
 
-    // Save to Firestore
     await db.collection('submissions').add({
       name,
       class: className,
@@ -248,73 +307,39 @@ submitBtn.onclick = async () => {
   submitBtn.disabled = false;
 };
 
-
-
-
+// Load suggestions (unchanged)
 async function loadSuggestions(){
-
   suggestionsContainer.innerHTML='Loading...';
-
   try{
-
     const snapshot=await db.collection('submissions').where('type','==','suggestion').get();
-
     suggestionsContainer.innerHTML='';
-
     snapshot.forEach(doc=>{
-
       const data=doc.data();
-
       const card=document.createElement('div');
-
       card.className='suggestion-card';
-
       card.innerHTML=`<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
-
-      <div class="vote-container">
-
-        <button class="vote-btn upvote">⬆</button>
-
-        <span class="vote-count">${data.upvotes||0}</span>
-
-        <button class="vote-btn downvote">⬇</button>
-
-        <span class="vote-count">${data.downvotes||0}</span>
-
-      </div>`;
-
+        <div class="vote-container">
+          <button class="vote-btn upvote">⬆</button>
+          <span class="vote-count">${data.upvotes||0}</span>
+          <button class="vote-btn downvote">⬇</button>
+          <span class="vote-count">${data.downvotes||0}</span>
+        </div>`;
       const upBtn=card.querySelector('.upvote');
-
       const downBtn=card.querySelector('.downvote');
 
-
-
       upBtn.onclick=async ()=>{
-
         if(!user) { showLoginPopup(); return; }
-
         const userId=user.uid;
-
         const docRef=db.collection('submissions').doc(doc.id);
-
         const upvoters=data.upvoters||[];
-
         const downvoters=data.downvoters||[];
-
         if(upvoters.includes(userId)||downvoters.includes(userId)) return;
-
         await docRef.update({
-
           upvotes:(data.upvotes||0)+1,
-
           upvoters:firebase.firestore.FieldValue.arrayUnion(userId)
-
         });
-
         loadSuggestions();
-
       };
-
       downBtn.onclick=async ()=>{
         if(!user) { showLoginPopup(); return; }
         const userId=user.uid;
@@ -328,7 +353,6 @@ async function loadSuggestions(){
         });
         loadSuggestions();
       };
-
       suggestionsContainer.appendChild(card);
     });
   }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions'; }
@@ -337,17 +361,3 @@ async function loadSuggestions(){
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
