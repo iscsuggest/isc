@@ -179,47 +179,88 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>modalBg.classList.remove('show');
 
-submitBtn.onclick = async ()=>{
-  if(!user){ alert("Please sign in first!"); return; }
-  const name=document.getElementById('name').value.trim();
-  const className=document.getElementById('class').value.trim();
-  const section=document.getElementById('section').value.trim();
-  const rollno=document.getElementById('rollno').value.trim();
-  const message=document.getElementById('message').value.trim();
-  if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
+submitBtn.onclick = async () => {
+  if (!user) { alert("Please sign in first!"); return; }
 
-  const key=`${user.email}_${currentType}`;
-  const lastTime=localStorage.getItem(key);
-  const now=Date.now();
-  const limit=currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
-  if(lastTime && now-parseInt(lastTime)<limit){
-    const msLeft=limit-(now-parseInt(lastTime));
-    const hours=Math.floor(msLeft/(1000*60*60));
-    const minutes=Math.floor((msLeft%(1000*60*60))/(1000*60));
+  const name = document.getElementById('name').value.trim();
+  const className = document.getElementById('class').value.trim();
+  const section = document.getElementById('section').value.trim();
+  const rollno = document.getElementById('rollno').value.trim();
+  const message = document.getElementById('message').value.trim();
+
+  if (!name || !className || !section || !rollno || !message) { alert("Fill all fields!"); return; }
+
+  // --- Check for profanity using vector.profanity.dev API ---
+  try {
+    const response = await fetch('https://vector.profanity.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await response.json();
+    if (data.hasProfanity) {
+      alert("⚠️ Your message contains inappropriate language. Please remove it before submitting.");
+      return;
+    }
+  } catch (err) {
+    console.warn("Profanity check failed, proceeding anyway:", err);
+  }
+
+  const key = `${user.email}_${currentType}`;
+  const lastTime = localStorage.getItem(key);
+  const now = Date.now();
+  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000;
+  if (lastTime && now - parseInt(lastTime) < limit) {
+    const msLeft = limit - (now - parseInt(lastTime));
+    const hours = Math.floor(msLeft / (1000*60*60));
+    const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
     alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
     return;
   }
 
-  submitBtn.disabled=true;
-  try{
+  submitBtn.disabled = true;
+  document.getElementById('loading-container').style.display = 'flex';
+
+  try {
     // === Send email via Google Apps Script ===
     await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec', {
       method:'POST',
-      body: JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),
+      body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
       headers:{'Content-Type':'application/json'},
       mode:'no-cors'
     });
 
     // Save to Firestore
-    await db.collection('submissions').add({name,class:className,section,rollno,message,type:currentType,email:user.email,upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-    localStorage.setItem(key,Date.now());
+    await db.collection('submissions').add({
+      name,
+      class: className,
+      section,
+      rollno,
+      message,
+      type: currentType,
+      email: user.email,
+      upvotes: 0,
+      downvotes: 0,
+      upvoters: [],
+      downvoters: [],
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    localStorage.setItem(key, Date.now());
     alert("✅ Submitted successfully!");
     modalBg.classList.remove('show');
-    ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
+    ['name','class','section','rollno','message'].forEach(id => document.getElementById(id).value = '');
     loadSuggestions();
-  }catch(err){ alert("❌ "+err.message);}
-  submitBtn.disabled=false;
+
+  } catch(err) {
+    alert("❌ " + err.message);
+  } finally {
+    submitBtn.disabled = false;
+    document.getElementById('loading-container').style.display = 'none';
+  }
 };
+
 
 async function loadSuggestions(){
   if(!user){ suggestionsContainer.innerHTML='Please sign in to see suggestions.'; return; }
@@ -297,3 +338,4 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
