@@ -14,14 +14,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;}
-header{
-  width:100%;display:flex;justify-content:space-between;align-items:center;
-  padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));
-  position:fixed;top:0;z-index:100;transition:background 0.5s;
-}
+header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));position:fixed;top:0;z-index:100;transition:background 0.5s;}
 body{padding-top:130px;}
 header img{height:50px;}
-header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;margin-left:5px;}
+header div button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;margin-left:5px;}
 h1{text-align:center;margin:20px 0 10px 0;color:white;}
 h2{text-align:center;font-weight:400;margin-bottom:10px;color:#ccc;}
 p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
@@ -29,23 +25,25 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .actions{display:flex;flex-direction:column;gap:15px;margin-bottom:30px;width:250px;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
 .actions button:hover{background:#8b2ecc;}
-.loading-container {display: flex;justify-content: center;margin-top: 20px;}
-.modal-bg, #email-modal, #verify-popup {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;}
-.modal, #verify-popup .modal-content{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;color:white;}
-.modal input,.modal textarea,#email-modal input{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;position:relative;}
-.modal button,#email-modal button,#verify-popup button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
-.modal .close,#email-modal .close,#verify-popup .close{background:#333;}
-.modal h3,#email-modal h3,#verify-popup h3{color:white;margin-bottom:10px;text-align:center;}
+.loading-container{display:flex;justify-content:center;margin-top:20px;}
 .vote-container{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px;}
 .vote-btn{cursor:pointer;background:#444;border:none;padding:5px 10px;border-radius:5px;color:white;}
 .vote-count{color:white;font-weight:bold;}
-#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color: white;text-align: center;}
+#suggestions-container{margin-top:20px;width:90%;max-width:600px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
 .suggestion-card{background:#222;padding:15px;border-radius:10px;color:white;}
 
-/* Show/Hide inside password */
+/* Modal & animation */
+.modal-bg,.popup,.verify-popup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:1000;opacity:0;transform:scale(0.8);transition:all 0.3s ease;}
+.modal-bg.show,.popup.show,.verify-popup.show{opacity:1;transform:scale(1);}
+.modal,.popup .modal,.verify-popup .modal-content{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;color:white;position:relative;}
+.modal input,.modal textarea,.popup input{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
+.modal button,.popup button,.verify-popup button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
+.modal .close,.popup .close,.verify-popup .close{background:#333;}
+.modal h3,.popup h3,.verify-popup h3{color:white;margin-bottom:10px;text-align:center;}
 .password-container{position:relative;width:100%;}
-.password-container input{width:100%;padding-right:50px;}
-.password-container .toggle-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:white;cursor:pointer;}
+.password-container input{width:100%;padding-right:40px;}
+.password-container .toggle-pass{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:white;cursor:pointer;font-size:20px;transition:transform 0.2s;}
+.password-container .toggle-pass:hover{transform:translateY(-50%) scale(1.3);}
 </style>
 </head>
 <body>
@@ -89,7 +87,7 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 </div>
 
 <!-- Email Login Modal -->
-<div id="email-modal">
+<div class="popup" id="email-modal">
   <div class="modal">
     <h3>Email Sign In/Up</h3>
     <input type="email" id="email" placeholder="Email">
@@ -104,10 +102,10 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
   </div>
 </div>
 
-<!-- Email Verification / Reset Popup -->
-<div id="verify-popup">
+<!-- Verification / Reset Popup -->
+<div class="verify-popup" id="verify-popup">
   <div class="modal-content">
-    <h3 id="verify-title">Verify Email</h3>
+    <h3 id="verify-title">Check your email</h3>
     <p id="verify-msg"></p>
     <button id="resend-verification">Resend Email</button>
     <button class="close" id="close-verify">Close</button>
@@ -115,13 +113,18 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 </div>
 
 <script>
-// Firebase Init
-const firebaseConfig = {apiKey:"AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",authDomain:"ibn-e-sina-school.firebaseapp.com",projectId:"ibn-e-sina-school",storageBucket:"ibn-e-sina-school.appspot.com",messagingSenderId:"897865466373",appId:"1:897865466373:web:107271a0b6b9e7fd36126c"};
+const firebaseConfig={
+apiKey:"AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
+authDomain:"ibn-e-sina-school.firebaseapp.com",
+projectId:"ibn-e-sina-school",
+storageBucket:"ibn-e-sina-school.appspot.com",
+messagingSenderId:"897865466373",
+appId:"1:897865466373:web:107271a0b6b9e7fd36126c"
+};
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-// Elements
 const loginBtn=document.getElementById('login-btn');
 const emailLoginBtn=document.getElementById('email-login-btn');
 const suggestionBtn=document.getElementById('suggestion-btn');
@@ -138,116 +141,128 @@ const togglePassBtn=document.getElementById('toggle-pass');
 const emailSigninBtn=document.getElementById('email-signin');
 const emailSignupBtn=document.getElementById('email-signup');
 const resetPassBtn=document.getElementById('reset-pass');
+const emailInput=document.getElementById('email');
+const passwordInput=document.getElementById('password');
 
 const verifyPopup=document.getElementById('verify-popup');
-const verifyTitle=document.getElementById('verify-title');
 const verifyMsg=document.getElementById('verify-msg');
 const resendVerifyBtn=document.getElementById('resend-verification');
 const closeVerifyBtn=document.getElementById('close-verify');
 
 let user=null,currentType=null;
 
-// UI Helpers
-function updateUI(){loginBtn.textContent=user?'Logout':'Sign in with Google';emailLoginBtn.style.display=user?'none':'inline-block';}
-function clearEmailFields(){document.getElementById('email').value='';document.getElementById('password').value='';}
-function showVerifyPopup(msg){verifyMsg.textContent=msg;verifyPopup.style.display='flex';}
-function hideVerifyPopup(){verifyPopup.style.display='none';}
+// Background Gradient
+function getRandomGradient(){
+  const darks=[
+    'linear-gradient(to bottom,#1a1a1a,#2c2c2c)',
+    'linear-gradient(to bottom,#0d0d2c,#1a1a4d)',
+    'linear-gradient(to bottom,#1a1a1a,#003300)',
+    'linear-gradient(to bottom,#111111,#220022)'
+  ];
+  return darks[Math.floor(Math.random()*darks.length)];
+}
+document.body.style.background=getRandomGradient();
 
-// Background
-document.body.style.background='linear-gradient(to bottom,#1a1a1a,#2c2c2c)';
+// UI Updates
+function updateUI(){
+  loginBtn.textContent=user?'Logout':'Sign in with Google';
+  emailLoginBtn.style.display=user?'none':'inline-block';
+}
 
-// Login/out Google
+// Google Sign In
 loginBtn.onclick=()=>{
-  if(!user){ const provider=new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider).then(res=>{user=res.user;updateUI();if(user.emailVerified) loadSuggestions();}); }
-  else{ auth.signOut().then(()=>{user=null;updateUI();}); }
+  if(!user){
+    const provider=new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(res=>{user=res.user;updateUI();loadSuggestions();}).catch(err=>alert(err.message));
+  } else auth.signOut().then(()=>{user=null;updateUI();});
 };
 
-// Email login modal
-emailLoginBtn.onclick=()=>emailModal.style.display='flex';
-closeEmailModal.onclick=()=>emailModal.style.display='none';
-togglePassBtn.onclick=()=>{
-  const passInput=document.getElementById('password');
-  passInput.type=passInput.type==='password'?'text':'password';
-};
+// Email Modal
+emailLoginBtn.onclick=()=>{emailModal.classList.add('show');emailInput.value='';passwordInput.value='';};
+
+// Toggle password
+togglePassBtn.onclick=()=>{passwordInput.type=passwordInput.type==='password'?'text':'password';};
+
+// Close modals
+closeEmailModal.onclick=()=>emailModal.classList.remove('show');
+closeVerifyBtn.onclick=()=>verifyPopup.classList.remove('show');
+closeModal.onclick=()=>modalBg.classList.remove('show');
 
 // Email Sign Up
-emailSignupBtn.onclick=()=>{
-  const email=document.getElementById('email').value.trim();
-  const password=document.getElementById('password').value.trim();
-  if(!email||!password){ alert("Enter email & password!"); return; }
-  auth.createUserWithEmailAndPassword(email,password).then(cred=>{
-    user=cred.user;
-    user.sendEmailVerification().then(()=>showVerifyPopup("✅ Verification email sent! Check inbox/spam folder and sign in again."));
-    emailModal.style.display='none'; clearEmailFields(); updateUI();
-  }).catch(err=>alert(err.message));
+emailSignupBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  const pass=passwordInput.value.trim();
+  if(!email||!pass){alert('Fill all fields!');return;}
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await cred.user.sendEmailVerification();
+    verifyMsg.innerHTML="Verification email sent. Check inbox/junk.";
+    verifyPopup.classList.add('show');
+    emailModal.classList.remove('show');
+  }catch(err){alert(err.message);}
 };
 
 // Email Sign In
-emailSigninBtn.onclick=()=>{
-  const email=document.getElementById('email').value.trim();
-  const password=document.getElementById('password').value.trim();
-  if(!email||!password){ alert("Enter email & password!"); return; }
-  auth.signInWithEmailAndPassword(email,password).then(cred=>{
+emailSigninBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  const pass=passwordInput.value.trim();
+  if(!email||!pass){alert('Fill all fields!');return;}
+  try{
+    const cred=await auth.signInWithEmailAndPassword(email,pass);
+    if(!cred.user.emailVerified){alert('Email not verified yet. Check inbox/junk.'); return;}
     user=cred.user;
-    if(!user.emailVerified){ showVerifyPopup("⚠️ Email not verified! Check inbox/spam folder."); auth.signOut(); user=null; updateUI(); }
-    else{ emailModal.style.display='none'; clearEmailFields(); updateUI(); loadSuggestions(); }
-  }).catch(err=>alert(err.message));
+    updateUI();
+    emailModal.classList.remove('show');
+    loadSuggestions();
+  }catch(err){alert(err.message);}
 };
 
-// Reset Password
-resetPassBtn.onclick=()=>{
-  const email=document.getElementById('email').value.trim();
-  if(!email){ alert("Enter email to reset password!"); return; }
-  auth.sendPasswordResetEmail(email).then(()=>{
-    showVerifyPopup("✅ Password reset email sent! Check inbox/spam folder and sign in again.");
-    emailModal.style.display='none'; clearEmailFields();
-  }).catch(err=>alert(err.message));
+// Reset password
+resetPassBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  if(!email){alert('Enter your email');return;}
+  try{
+    await auth.sendPasswordResetEmail(email);
+    verifyMsg.innerHTML="Password reset email sent. Check inbox/junk. After verifying, sign in again.";
+    verifyPopup.classList.add('show');
+    emailModal.classList.remove('show');
+  }catch(err){alert(err.message);}
 };
 
 // Resend verification
-resendVerifyBtn.onclick=()=>{if(user) user.sendEmailVerification().then(()=>alert("Verification email sent!")).catch(err=>alert(err.message));};
-closeVerifyBtn.onclick=hideVerifyPopup;
+resendVerifyBtn.onclick=async()=>{
+  if(!auth.currentUser){alert('Sign in first');return;}
+  try{await auth.currentUser.sendEmailVerification(); alert('Verification email resent.');}catch(err){alert(err.message);}
+};
 
-// Auth State
-auth.onAuthStateChanged(u=>{user=u;updateUI();if(user && user.emailVerified) loadSuggestions();});
+// Auth state listener
+auth.onAuthStateChanged(u=>{user=u;updateUI();if(user) loadSuggestions();});
 
-// Submission modal
-function openModal(type){if(!user){alert("Sign in first!");return;} if(!user.emailVerified){showVerifyPopup("⚠️ Verify email first!");return;} currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.style.display='flex';}
-suggestionBtn.onclick=()=>openModal('suggestion');
-complaintBtn.onclick=()=>openModal('complaint');
-closeModal.onclick=()=>{modalBg.style.display='none';}
+// Submission popup functions
+function openModal(type){if(!user){alert('Sign in first');return;}currentType=type;modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint";modalBg.classList.add('show');}
 
-// Submit suggestion/complaint
+// Submission button click
 submitBtn.onclick=async()=>{
-  if(!user){alert("Sign in first!");return;} if(!user.emailVerified){showVerifyPopup("⚠️ Verify email first!");return;}
+  if(!user){alert('Sign in first');return;}
   const name=document.getElementById('name').value.trim();
   const className=document.getElementById('class').value.trim();
   const section=document.getElementById('section').value.trim();
   const rollno=document.getElementById('rollno').value.trim();
   const message=document.getElementById('message').value.trim();
-  if(!name||!className||!section||!rollno||!message){alert("Fill all fields!"); return;}
-  const key=`${user.email}_${currentType}`;
-  const lastTime=localStorage.getItem(key);
-  const now=Date.now();
-  const limit=currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
-  if(lastTime && now - parseInt(lastTime)<limit){
-    const msLeft=limit-(now-parseInt(lastTime));
-    const hours=Math.floor(msLeft/(1000*60*60));
-    const minutes=Math.floor((msLeft%(1000*60*60))/(1000*60));
-    alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
-    return;
-  }
+  if(!name||!className||!section||!rollno||!message){alert('Fill all fields!');return;}
+
   submitBtn.disabled=true;
   try{
-    await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{method:'POST',body:JSON.stringify({name,class:className,section,rollno,message,type:currentType,email:user.email}),headers:{'Content-Type':'application/json'},mode:'no-cors'});
-    localStorage.setItem(key,Date.now());
     await db.collection('submissions').add({name,class:className,section,rollno,message,type:currentType,email:user.email,upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-    alert("✅ Submitted successfully!"); modalBg.style.display='none'; ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value=''); loadSuggestions();
-  }catch(err){alert("❌ Error: "+err.message);}
+    alert('✅ Submitted successfully!');
+    modalBg.classList.remove('show');
+    ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
+    loadSuggestions();
+  }catch(err){alert('❌ Error: '+err.message);}
   submitBtn.disabled=false;
 };
 
-// Load Suggestions
+// Load suggestions
 async function loadSuggestions(){
   suggestionsContainer.innerHTML='Loading...';
   try{
@@ -255,21 +270,21 @@ async function loadSuggestions(){
     suggestionsContainer.innerHTML='';
     snapshot.forEach(doc=>{
       const data=doc.data();
-      const card=document.createElement('div');
-      card.className='suggestion-card';
+      const card=document.createElement('div');card.className='suggestion-card';
       card.innerHTML=`<strong>${data.name}</strong> (${data.class}-${data.section})<p>${data.message}</p>
-        <div class="vote-container">
-          <button class="vote-btn upvote">⬆</button><span class="vote-count">${data.upvotes||0}</span>
-          <button class="vote-btn downvote">⬇</button><span class="vote-count">${data.downvotes||0}</span>
-        </div>`;
-      const upBtn=card.querySelector('.upvote');
-      const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async()=>{if(!user){alert("Sign in first!");return;}const docRef=db.collection('submissions').doc(doc.id);if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      downBtn.onclick=async()=>{if(!user){alert("Sign in first!");return;}const docRef=db.collection('submissions').doc(doc.id);if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      <div class="vote-container"><button class="vote-btn upvote">⬆</button><span class="vote-count">${data.upvotes||0}</span>
+      <button class="vote-btn downvote">⬇</button><span class="vote-count">${data.downvotes||0}</span></div>`;
+      const upBtn=card.querySelector('.upvote');const downBtn=card.querySelector('.downvote');
+      upBtn.onclick=async()=>{if(!user){alert('Sign in first');return;}const docRef=db.collection('submissions').doc(doc.id);const upvoters=data.upvoters||[];const downvoters=data.downvoters||[];if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return;await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)});loadSuggestions();};
+      downBtn.onclick=async()=>{if(!user){alert('Sign in first');return;}const docRef=db.collection('submissions').doc(doc.id);const upvoters=data.upvoters||[];const downvoters=data.downvoters||[];if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return;await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)});loadSuggestions();};
       suggestionsContainer.appendChild(card);
     });
   }catch(err){suggestionsContainer.innerHTML='❌ Failed to load suggestions';}
 }
+
+// Submission button events
+suggestionBtn.onclick=()=>openModal('suggestion');
+complaintBtn.onclick=()=>openModal('complaint');
 </script>
 </body>
 </html>
