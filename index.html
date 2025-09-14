@@ -222,7 +222,7 @@ submitBtn.onclick = async () => {
       return;
     }
 
-    await fetch('https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',{
+    await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
       method:'POST',
       body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
       headers:{'Content-Type':'application/json'},
@@ -326,4 +326,5 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
