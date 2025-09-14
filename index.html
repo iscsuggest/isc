@@ -341,66 +341,80 @@ async function loadSuggestions(){
         <button class="vote-btn downvote">⬇</button>
         <span class="vote-count">${data.downvotes||0}</span>
       </div>`;
-      const upBtn=card.querySelector('.upvote');
-      const downBtn=card.querySelector('.downvote');
       const docRef=db.collection('submissions').doc(doc.id);
 
       // ✅ Updated vote logic
-      upBtn.onclick=async()=>{
-        if(!user){ showToast("Sign in first!"); return;}
-        const snap=await docRef.get(); const d=snap.data();
+      const upBtn = card.querySelector('.upvote');
+const downBtn = card.querySelector('.downvote');
 
-        if((d.upvoters||[]).includes(user.uid)){
-          await docRef.update({
-            upvotes:(d.upvotes||0)-1,
-            upvoters:firebase.firestore.FieldValue.arrayRemove(user.uid)
-          });
-          showToast("❌ Upvote removed");
-        }else if((d.downvoters||[]).includes(user.uid)){
-          await docRef.update({
-            downvotes:(d.downvotes||0)-1,
-            upvotes:(d.upvotes||0)+1,
-            downvoters:firebase.firestore.FieldValue.arrayRemove(user.uid),
-            upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
-          });
-          showToast("✅ Switched to upvote");
-        }else{
-          await docRef.update({
-            upvotes:(d.upvotes||0)+1,
-            upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
-          });
-          showToast("✅ Successful upvote");
-        }
-        loadSuggestions();
-      };
+upBtn.onclick = async () => {
+  if (!user) { showToast("Sign in first!"); return; }
+  const docRef = db.collection('submissions').doc(doc.id);
+  const snap = await docRef.get();
+  const data = snap.data();
 
-      downBtn.onclick=async()=>{
-        if(!user){ showToast("Sign in first!"); return;}
-        const snap=await docRef.get(); const d=snap.data();
+  if ((data.upvoters || []).includes(user.uid)) {
+    // remove upvote
+    await docRef.update({
+      upvotes: firebase.firestore.FieldValue.increment(-1),
+      upvoters: firebase.firestore.FieldValue.arrayRemove(user.uid)
+    });
+    showToast("⬆️ Upvote removed");
+  } else if ((data.downvoters || []).includes(user.uid)) {
+    // switch downvote → upvote
+    await docRef.update({
+      downvotes: firebase.firestore.FieldValue.increment(-1),
+      downvoters: firebase.firestore.FieldValue.arrayRemove(user.uid),
+      upvotes: firebase.firestore.FieldValue.increment(1),
+      upvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
+    });
+    showToast("🔄 Switched to upvote");
+  } else {
+    // add upvote
+    await docRef.update({
+      upvotes: firebase.firestore.FieldValue.increment(1),
+      upvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
+    });
+    showToast("✅ Upvoted");
+  }
 
-        if((d.downvoters||[]).includes(user.uid)){
-          await docRef.update({
-            downvotes:(d.downvotes||0)-1,
-            downvoters:firebase.firestore.FieldValue.arrayRemove(user.uid)
-          });
-          showToast("❌ Downvote removed");
-        }else if((d.upvoters||[]).includes(user.uid)){
-          await docRef.update({
-            upvotes:(d.upvotes||0)-1,
-            downvotes:(d.downvotes||0)+1,
-            upvoters:firebase.firestore.FieldValue.arrayRemove(user.uid),
-            downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
-          });
-          showToast("✅ Switched to downvote");
-        }else{
-          await docRef.update({
-            downvotes:(d.downvotes||0)+1,
-            downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)
-          });
-          showToast("✅ Successful downvote");
-        }
-        loadSuggestions();
-      };
+  loadSuggestions(); // refresh list
+};
+
+downBtn.onclick = async () => {
+  if (!user) { showToast("Sign in first!"); return; }
+  const docRef = db.collection('submissions').doc(doc.id);
+  const snap = await docRef.get();
+  const data = snap.data();
+
+  if ((data.downvoters || []).includes(user.uid)) {
+    // remove downvote
+    await docRef.update({
+      downvotes: firebase.firestore.FieldValue.increment(-1),
+      downvoters: firebase.firestore.FieldValue.arrayRemove(user.uid)
+    });
+    showToast("⬇️ Downvote removed");
+  } else if ((data.upvoters || []).includes(user.uid)) {
+    // switch upvote → downvote
+    await docRef.update({
+      upvotes: firebase.firestore.FieldValue.increment(-1),
+      upvoters: firebase.firestore.FieldValue.arrayRemove(user.uid),
+      downvotes: firebase.firestore.FieldValue.increment(1),
+      downvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
+    });
+    showToast("🔄 Switched to downvote");
+  } else {
+    // add downvote
+    await docRef.update({
+      downvotes: firebase.firestore.FieldValue.increment(1),
+      downvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
+    });
+    showToast("✅ Downvoted");
+  }
+
+  loadSuggestions(); // refresh list
+};
+
 
       suggestionsContainer.appendChild(card);
     });
@@ -464,6 +478,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
