@@ -15,20 +15,7 @@
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;position:relative;}
 header{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));position:fixed;top:0;z-index:100;transition:background 0.5s;}
 body{padding-top:90px;}
-header {width:100%; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0)); position:fixed; top:0; z-index:100; transition:background 0.5s;}
-
-.header-left img {height:50px;}
-
-.header-center {flex:1; text-align:center;}
-
-.nav-link {color:white; text-decoration:none; font-size:18px; position:relative;}
-.nav-link::after {content:""; position:absolute; width:0; height:2px; bottom:-4px; left:0; background:white; transition:width 0.3s;}
-.nav-link:hover::after {width:100%;}
-
-.header-right button {padding:8px 16px; border:none; border-radius:5px; background:#6a0dad; color:white; cursor:pointer; font-weight:bold;}
-.header-right .secondary {margin-left:10px; background:#444;}
-.header-right .secondary:hover {background:#555;}
-
+header img{height:50px;}
 header button{padding:8px 16px;border:none;border-radius:5px;background:#6a0dad;color:white;cursor:pointer;font-weight:bold;}
 header .secondary{margin-left:10px;background:#444;}
 header .secondary:hover{background:#555;}
@@ -69,23 +56,47 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;}
 #loading-overlay.show {display:flex;}
 .spinner {border:6px solid #f3f3f3;border-top:6px solid #6a0dad;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;}
 @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+/* Header layout/center fix (paste at end of <style>) */
+.site-header{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:linear-gradient(to bottom,rgba(17,17,17,0.9),rgba(17,17,17,0));position:fixed;top:0;left:0;right:0;z-index:100;transition:background .5s;}
+.header-left{flex:0 0 auto;}
+.header-left img{height:50px;display:block;}
+.header-center{flex:1 1 auto;display:flex;justify-content:center;align-items:center;pointer-events:none;} /* pointer-events none so clicks go to link only */
+.nav-link{pointer-events:auto;color:inherit;text-decoration:none;font-size:18px;padding:6px 8px;position:relative;display:inline-block;font-family:inherit;font-weight:500;}
+.nav-link::after{content:"";position:absolute;left:0;right:0;margin:0 auto;height:2px;width:0;background:currentColor;bottom:-6px;transition:width .28s ease;}
+.nav-link:hover::after{width:100%;}
+.header-right{flex:0 0 auto;display:flex;gap:8px;align-items:center;}
+.header-right button{padding:8px 12px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:600;cursor:pointer;}
+.header-right .secondary{background:#444;}
+.header-right .secondary:hover{background:#555;}
+/* Make sure header elements inherit page font (prevents any font swap) */
+.site-header, .site-header *{font-family:inherit}
+
+/* Mobile tweak: keep center link visible and centered */
+@media (max-width:520px){
+  .nav-link{font-size:16px;padding:4px 6px;}
+  .header-right button{padding:6px 8px;font-size:14px;}
+}
+
 </style>
 </head>
 <body>
 
 
-<header>
+<header class="site-header">
   <div class="header-left">
     <img src="images/image.png" alt="Ibn-e-Sina Logo">
   </div>
+
   <nav class="header-center">
     <a href="why-vote.html" class="nav-link">Why Vote?</a>
   </nav>
+
   <div class="header-right">
     <button id="login-btn">Sign in with Google</button>
     <button id="email-login-btn" class="secondary">Sign in with Email</button>
   </div>
 </header>
+
 
 
 <img src="images/person.png" alt="Talal Mukhtar" class="profile-img">
@@ -372,6 +383,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
