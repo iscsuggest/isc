@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;position:relative;}
@@ -104,6 +105,7 @@ p.description{text-align:center;max-width:900px;margin-bottom:20px;color:white;f
 </div>
 
 <script>
+  
 const firebaseConfig = {
     apiKey: "AIzaSyCGkF5OkclTr8Xjxe5XW3rjrP3vh4Dr2Ws",
     authDomain: "ibn-e-sina-school.firebaseapp.com",
@@ -141,6 +143,7 @@ document.body.style.background='linear-gradient(to bottom,#1a1a1a,#2c2c2c)';
 
 function showLoading(){loadingOverlay.classList.add('show');}
 function hideLoading(){loadingOverlay.classList.remove('show');}
+  
 
 loginBtn.onclick = async () => {
   if(!user){
@@ -240,6 +243,12 @@ submitBtn.onclick = async () => {
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     await loadSuggestions();
     alert("✅ Submitted successfully!");
+    
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
 
   } catch(err){ alert("❌ "+err.message); }
   finally{ submitBtn.disabled=false; hideLoading(); }
@@ -326,3 +335,4 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
