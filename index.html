@@ -6,11 +6,9 @@
 <title>Ibn-e-Sina Portal</title>
 <link rel="icon" type="image/png" href="images/image.png">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
 body{min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.8s;}
@@ -28,8 +26,8 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 .actions button{padding:12px;border-radius:8px;border:none;background:#6a0dad;color:white;cursor:pointer;font-size:16px;font-weight:bold;transition:0.3s;}
 .actions button:hover{background:#8b2ecc;}
 .loading-container {display: flex;justify-content: center;margin-top: 20px;}
-.modal-bg, .popup {display:none; position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;opacity:0; transform: scale(0.8); transition: all 0.3s ease; z-index:1000;}
-.modal-bg.show, .popup.show {display:flex; opacity:1; transform:scale(1);}
+.modal-bg, .popup {display:none; position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;opacity:0; transform: translateY(-50px); transition: all 0.3s ease; z-index:1000;}
+.modal-bg.show, .popup.show {display:flex; opacity:1; transform:translateY(0);}
 .modal, .popup-content{background:#111;padding:20px;border-radius:10px;width:90%;max-width:400px;display:flex;flex-direction:column;gap:15px;color:white;text-align:center;}
 .modal input,.popup-content input,.modal textarea{width:100%;padding:10px;border-radius:5px;border:1px solid #555;background:#222;color:white;}
 .modal button,.popup-content button{padding:10px;border-radius:5px;border:none;background:#6a0dad;color:white;font-weight:bold;cursor:pointer;}
@@ -86,13 +84,13 @@ p.description{text-align:center;max-width:600px;margin-bottom:20px;color:white;}
 <!-- Email Login Modal -->
 <div id="email-modal" class="popup">
   <div class="popup-content">
-    <h3>Email Login</h3>
+    <h3>Email Login / Signup</h3>
     <input type="email" id="email-input" placeholder="Email">
     <div style="position: relative;">
       <input type="password" id="password-input" placeholder="Password">
       <span id="toggle-password">👁️</span>
     </div>
-    <button id="email-submit-btn">Login</button>
+    <button id="email-submit-btn">Login / Signup</button>
     <button id="reset-password-btn" style="background:#555;">Reset Password</button>
     <button class="close-btn">Cancel</button>
   </div>
@@ -132,124 +130,82 @@ const emailCloseBtn = emailModal.querySelector('.close-btn');
 let currentType = null;
 let user = null;
 
-// Gradient background
-function getRandomGradient(){
-  const darks=['linear-gradient(to bottom,#1a1a1a,#2c2c2c)','linear-gradient(to bottom,#0d0d2c,#1a1a4d)','linear-gradient(to bottom,#1a1a1a,#003300)','linear-gradient(to bottom,#111111,#220022)'];
-  return darks[Math.floor(Math.random()*darks.length)];
-}
-document.body.style.background=getRandomGradient();
+document.body.style.background='linear-gradient(to bottom,#1a1a1a,#2c2c2c)';
 
 // Google login
-loginBtn.onclick = () => {
+loginBtn.onclick = async () => {
   if(!user){
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(res => { 
-      user=res.user; 
-      loginBtn.textContent="Logout"; 
-      emailLoginBtn.style.display='none'; 
-      loadSuggestions(); 
-    });
-  } else {
-    auth.signOut().then(()=>{ 
-      user=null; 
-      loginBtn.textContent="Sign in with Google"; 
-      emailLoginBtn.style.display='inline-block'; 
-    });
+    try{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const res = await auth.signInWithPopup(provider);
+      user = res.user;
+      loginBtn.textContent="Logout";
+      emailLoginBtn.style.display='none';
+      loadSuggestions();
+    }catch(err){ alert(err.message);}
+  }else{
+    await auth.signOut();
+    user = null;
+    loginBtn.textContent="Sign in with Google";
+    emailLoginBtn.style.display='inline-block';
   }
 };
 
 // Email login popup
-emailLoginBtn.onclick = () => { emailModal.classList.add('show'); emailInput.value=''; passwordInput.value=''; };
+emailLoginBtn.onclick = ()=>{ emailModal.classList.add('show'); emailInput.value=''; passwordInput.value=''; };
 
-// Toggle password visibility
-togglePassword.onclick = () => { passwordInput.type = passwordInput.type==='password'?'text':'password'; };
-emailCloseBtn.onclick = () => emailModal.classList.remove('show');
-emailModal.onclick = e => { if(e.target===emailModal) emailModal.classList.remove('show'); };
+// Toggle password
+togglePassword.onclick = ()=>{ passwordInput.type=passwordInput.type==='password'?'text':'password'; };
 
-// Auth state
-auth.onAuthStateChanged(u => { 
-  user = u && u.emailVerified ? u : null; 
-  loginBtn.textContent = user ? "Logout" : "Sign in with Google"; 
-  emailLoginBtn.style.display = user ? 'none' : 'inline-block';
+// Close email modal
+emailCloseBtn.onclick = ()=>emailModal.classList.remove('show');
+emailModal.onclick = e=>{ if(e.target===emailModal) emailModal.classList.remove('show'); };
+
+// Auth state listener
+auth.onAuthStateChanged(u=>{
+  user = u && u.emailVerified ? u : null;
+  loginBtn.textContent = user?"Logout":"Sign in with Google";
+  emailLoginBtn.style.display = user?'none':'inline-block';
   if(user) loadSuggestions();
 });
 
-// Popup modals
-function showLoginPopup(msg="Please sign in first!"){
-  const popup = document.createElement('div');
-  popup.style.position='fixed';
-  popup.style.top='50%';
-  popup.style.left='50%';
-  popup.style.transform='translate(-50%,-50%) scale(0.8)';
-  popup.style.background='#111';
-  popup.style.padding='20px';
-  popup.style.borderRadius='10px';
-  popup.style.zIndex='10000';
-  popup.style.textAlign='center';
-  popup.style.color='white';
-  popup.style.transition='all 0.3s ease';
-  popup.textContent=msg;
-  const okBtn=document.createElement('button');
-  okBtn.textContent="OK";
-  okBtn.style.marginTop='10px';
-  okBtn.onclick=()=>{document.body.removeChild(popup);}
-  popup.appendChild(okBtn);
-  document.body.appendChild(popup);
-  setTimeout(()=>popup.style.transform='translate(-50%,-50%) scale(1)',10);
-}
-
-// Suggestion/complaint popup
-function openModal(type){if(!user){ showLoginPopup(); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
+// Suggestion/Complaint modal
+function openModal(type){ if(!user){ alert("Please sign in first!"); return; } currentType=type; modalTitle.textContent=type==='suggestion'?"Submit Suggestion":"Submit Complaint"; modalBg.classList.add('show');}
 suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
-closeModal.onclick = ()=>{ modalBg.classList.remove('show'); };
+closeModal.onclick = ()=>modalBg.classList.remove('show');
 
-// Rate-limited submit function
-submitBtn.onclick = async () => {
-  if(!user){ showLoginPopup(); return; }
-
+// Rate-limited submit
+submitBtn.onclick = async ()=>{
+  if(!user){ alert("Please sign in first!"); return; }
   const name=document.getElementById('name').value.trim();
   const className=document.getElementById('class').value.trim();
   const section=document.getElementById('section').value.trim();
   const rollno=document.getElementById('rollno').value.trim();
   const message=document.getElementById('message').value.trim();
-
   if(!name||!className||!section||!rollno||!message){ alert("Fill all fields!"); return; }
 
-  const key = `${user.email}_${currentType}`;
-  const lastTime = localStorage.getItem(key);
-  const now = Date.now();
-  const limit = currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
+  const key=`${user.email}_${currentType}`;
+  const lastTime=localStorage.getItem(key);
+  const now=Date.now();
+  const limit=currentType==='suggestion'?7*24*60*60*1000:24*60*60*1000;
   if(lastTime && now-parseInt(lastTime)<limit){
-    const msLeft = limit-(now-parseInt(lastTime));
-    const hours = Math.floor(msLeft/(1000*60*60));
-    const minutes = Math.floor((msLeft%(1000*60*60))/(1000*60));
+    const msLeft=limit-(now-parseInt(lastTime));
+    const hours=Math.floor(msLeft/(1000*60*60));
+    const minutes=Math.floor((msLeft%(1000*60*60))/(1000*60));
     alert(`⏳ Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`);
     return;
   }
 
   submitBtn.disabled=true;
-
   try{
-    await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
-      method:'POST',
-      body: JSON.stringify({name, class: className, section, rollno, message, type: currentType, email: user.email}),
-      headers:{'Content-Type':'application/json'},
-      mode:'no-cors'
-    });
-
-    localStorage.setItem(key, Date.now());
-
-    await db.collection('submissions').add({
-      name,class:className,section,rollno,message,type:currentType,email:user.email,
-      upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-
+    await db.collection('submissions').add({name,class:className,section,rollno,message,type:currentType,email:user.email,upvotes:0,downvotes:0,upvoters:[],downvoters:[],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+    localStorage.setItem(key,Date.now());
     alert("✅ Submitted successfully!");
     modalBg.classList.remove('show');
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     loadSuggestions();
-  } catch(err){ alert("❌ Error: "+err.message);}
+  }catch(err){ alert("❌ "+err.message);}
   submitBtn.disabled=false;
 };
 
@@ -273,32 +229,40 @@ async function loadSuggestions(){
       </div>`;
       const upBtn=card.querySelector('.upvote');
       const downBtn=card.querySelector('.downvote');
-      upBtn.onclick=async ()=>{ if(!user){ showLoginPopup(); return;} const docRef=db.collection('submissions').doc(doc.id); const upvoters=data.upvoters||[]; const downvoters=data.downvoters||[]; if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
-      downBtn.onclick=async ()=>{ if(!user){ showLoginPopup(); return;} const docRef=db.collection('submissions').doc(doc.id); const upvoters=data.upvoters||[]; const downvoters=data.downvoters||[]; if(upvoters.includes(user.uid)||downvoters.includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      upBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({upvotes:(data.upvotes||0)+1,upvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
+      downBtn.onclick=async()=>{ if(!user){ alert("Sign in first!"); return;} const docRef=db.collection('submissions').doc(doc.id); if((data.upvoters||[]).includes(user.uid)||(data.downvoters||[]).includes(user.uid)) return; await docRef.update({downvotes:(data.downvotes||0)+1,downvoters:firebase.firestore.FieldValue.arrayUnion(user.uid)}); loadSuggestions();};
       suggestionsContainer.appendChild(card);
     });
-  }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions'; }
+  }catch(err){ suggestionsContainer.innerHTML='❌ Failed to load suggestions';}
 }
 
-// Email login strict verification
+// Email login / signup
 emailSubmitBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
   const pass=passwordInput.value.trim();
-  if(!email||!pass){ alert("Fill both fields"); return; }
+  if(!email||!pass){ alert("Fill all fields!"); return; }
   try{
-    const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+    // Try sign in first
+    let cred;
+    try{ cred = await auth.signInWithEmailAndPassword(email,pass);}catch(e){
+      // If user not exist, create account
+      cred = await auth.createUserWithEmailAndPassword(email,pass);
+      await cred.user.sendEmailVerification();
+      alert("✅ Account created. Please verify your email. Check inbox/junk folder.");
+      await auth.signOut();
+      return;
+    }
     if(!cred.user.emailVerified){
       alert("⚠️ Email not verified. Check inbox/junk folder.");
       await cred.user.sendEmailVerification();
       await auth.signOut();
-      user=null;
       return;
     }
     user=cred.user;
     alert("✅ Logged in successfully!");
     emailModal.classList.remove('show');
-    emailLoginBtn.style.display='none';
     loginBtn.textContent='Logout';
+    emailLoginBtn.style.display='none';
     loadSuggestions();
   }catch(err){ alert("❌ "+err.message); await auth.signOut(); user=null; }
 };
@@ -306,13 +270,13 @@ emailSubmitBtn.onclick=async ()=>{
 // Password reset
 resetPasswordBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
-  if(!email){ alert("Enter email first"); return; }
+  if(!email){ alert("Enter your email first"); return; }
   try{
     await auth.sendPasswordResetEmail(email);
-    alert("📧 Password reset email sent. Check inbox/junk and sign in again.");
-    emailModal.classList.remove('show');
+    alert("📧 Password reset email sent. Check inbox/junk folder and log in again.");
     await auth.signOut();
     user=null;
+    emailModal.classList.remove('show');
   }catch(err){ alert("❌ "+err.message);}
 };
 </script>
