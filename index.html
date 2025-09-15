@@ -946,7 +946,7 @@ submitBtn.onclick = async () => {
       body: JSON.stringify({ message: combinedText })
     });
     const data = await response.json();
-    if(data.score && data.score > 0.9){
+    if(data.score && data.score > 0.85){
       showToast("Your message contains inappropriate words. Please remove them.", 'warning');
       return;
     }
@@ -1153,5 +1153,6 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
