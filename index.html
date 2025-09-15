@@ -49,9 +49,10 @@ body {
 .site-header {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: rgba(17, 17, 17, 0.95);
   backdrop-filter: blur(10px);
   position: fixed;
@@ -62,6 +63,7 @@ body {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid rgba(106, 13, 173, 0.3);
 }
+
 
 .header-left {
   flex: 0 0 auto;
@@ -481,7 +483,7 @@ h2 {
   .header-right { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
   .header-right button { padding: 6px 10px; font-size: 13px; }
   .header-right button i { margin-right: 4px; }
-  .header-center { width: 100%; text-align: center; margin-top: 8px; order: 2; }
+  .header-center { width: 100%; text-align: center; margin-top: 10px; order: 2; }
   .nav-link { font-size: 14px; padding: 6px 12px; }
   .profile-section { margin-top: 20px; }
   .profile-img { width: 140px; height: 140px; }
@@ -987,6 +989,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
