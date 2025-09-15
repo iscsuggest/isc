@@ -904,6 +904,36 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>modalBg.classList.remove('show');
 
+let localBadWords = [];
+
+async function loadBadWords() {
+  try {
+    const res = await fetch('/assets/badwords.json');
+    const json = await res.json();
+    localBadWords = (json.badwords || []).map(w => w.toLowerCase().trim());
+  } catch (err) {
+    console.error('Failed to load badwords.json', err);
+  }
+}
+
+function normalize(str) {
+  return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function checkProfanity(text) {
+  const combined = text.toLowerCase();
+  const combinedNorm = normalize(combined);
+
+  for (const word of localBadWords) {
+    if (!word) continue;
+    if (combined.includes(word)) return { blocked: true, word };
+    if (combinedNorm.includes(word)) return { blocked: true, word };
+  }
+  return { blocked: false };
+}
+
+document.addEventListener('DOMContentLoaded', () => loadBadWords());
+
 submitBtn.onclick = async () => {
   if (!user) { 
     showToast("Please sign in first!", 'warning'); 
@@ -949,15 +979,23 @@ if (snap.exists) {
   try {
     const combinedText = `${name} ${className} ${section} ${rollno} ${message}`;
 
-    const response = await fetch('https://vector.profanity.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: combinedText })
-    });
-    const data = await response.json();
-    if(data.score && data.score > 0.85){
-      showToast("Your message contains inappropriate words. Please remove them.", 'warning');
-      return;
+const localCheck = checkProfanity(combinedText);
+if (localCheck.blocked) {
+  showToast("Your message contains inappropriate words.", "warning");
+  return;
+}
+
+const response = await fetch('https://vector.profanity.dev', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ message: combinedText })
+});
+const data = await response.json();
+if (data.score && data.score > 0.85) {
+  showToast("Your message contains inappropriate English words.", "warning");
+  return;
+}
+
     }
 
     await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',{
@@ -1164,6 +1202,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
