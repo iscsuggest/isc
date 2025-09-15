@@ -921,17 +921,26 @@ submitBtn.onclick = async () => {
     return; 
   }
 
-  const key = `${user.email}_${currentType}`;
-  const lastTime = localStorage.getItem(key);
-  const now = Date.now();
-  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000;
-  if (lastTime && now - parseInt(lastTime) < limit) {
-    const msLeft = limit - (now - parseInt(lastTime));
-    const hours = Math.floor(msLeft / (1000*60*60));
-    const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
+  const limit = currentType === 'suggestion'
+  ? 7 * 24 * 60 * 60 * 1000   // 1 week
+  : 24 * 60 * 60 * 1000;      // 1 day
+
+const limitRef = db.collection("submissionLimits").doc(`${user.uid}_${currentType}`);
+const snap = await limitRef.get();
+
+if (snap.exists) {
+  const lastTime = snap.data().lastTime?.toDate();
+  const now = new Date();
+
+  if (lastTime && now - lastTime < limit) {
+    const msLeft = limit - (now - lastTime);
+    const hours = Math.floor(msLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
     showToast(`Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`, 'warning');
     return;
   }
+}
+
 
   submitBtn.disabled = true;
   showLoading();
@@ -964,7 +973,9 @@ submitBtn.onclick = async () => {
       timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    localStorage.setItem(key, Date.now());
+    await limitRef.set({
+  lastTime: firebase.firestore.FieldValue.serverTimestamp()
+});
     modalBg.classList.remove('show');
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     await loadSuggestions();
@@ -1153,6 +1164,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
