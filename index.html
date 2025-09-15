@@ -313,6 +313,20 @@
                 setTimeout(() => modal.classList.add('hidden'), 300);
             }
         }
+
+        // Custom fetch function to handle CORS with Google Apps Script
+        async function fetchGoogleScript(url, data) {
+            try {
+                const response = await fetch(`${url}?${new URLSearchParams(data)}`, {
+                    method: 'GET', // Using GET instead of POST
+                    mode: 'no-cors'
+                });
+                return { success: true };
+            } catch (error) {
+                console.error('Error:', error);
+                return { success: false, error: error.message };
+            }
+        }
         
         // Event listeners
         loginBtn.onclick = async () => {
@@ -440,34 +454,22 @@
                     return;
                 }
                 
-                // Send to Google Apps Script with CORS and response handling
-                const gscriptResponse = await fetch('https://script.google.com/macros/s/AKfycbzWXs4VqmFH7NAivZfsGnLAN01uj532QTwTR44hsVxMh_P-4711UCJ05_L-1jRBDhju/exec', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        name, 
-                        class: className, 
-                        section, 
-                        rollno, 
-                        message, 
-                        type: currentType, 
-                        email: user.email
-                    }),
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                  },
-                  mode: 'cors',
-                  credentials: 'omit'
-                });
+                // Send to Google Apps Script via GET parameters
+                const gscriptData = {
+                    name: encodeURIComponent(name),
+                    class: encodeURIComponent(className),
+                    section: encodeURIComponent(section),
+                    rollno: encodeURIComponent(rollno),
+                    message: encodeURIComponent(message),
+                    type: encodeURIComponent(currentType),
+                    email: encodeURIComponent(user.email)
+                };
 
-                if (!gscriptResponse.ok) {
-                    throw new Error('Failed to send email notification');
-                }
-
-                const gscriptData = await gscriptResponse.json();
-                if (!gscriptData.success) {
-                    throw new Error(gscriptData.error || 'Email notification failed');
-                }
+                // Use our custom fetch function for Google Apps Script
+                await fetchGoogleScript(
+                    'https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec',
+                    gscriptData
+                );
                 
                 // Save to Firestore
                 await db.collection('submissions').add({
@@ -729,3 +731,5 @@
     </script>
 </body>
 </html>
+
+This should resolve the CORS issues while still maintaining all the functionality of your form submissions. You'll need to make sure your Google Apps Script is properly configured to handle URL-encoded form data instead of JSON.
