@@ -904,36 +904,6 @@ suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
 closeModal.onclick = ()=>modalBg.classList.remove('show');
 
-let localBadWords = [];
-
-async function loadBadWords() {
-  try {
-    const res = await fetch('/assets/badwords.json');
-    const json = await res.json();
-    localBadWords = (json.badwords || []).map(w => w.toLowerCase().trim());
-  } catch (err) {
-    console.error('Failed to load badwords.json', err);
-  }
-}
-
-function normalize(str) {
-  return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-function checkProfanity(text) {
-  const combined = text.toLowerCase();
-  const combinedNorm = normalize(combined);
-
-  for (const word of localBadWords) {
-    if (!word) continue;
-    if (combined.includes(word)) return { blocked: true, word };
-    if (combinedNorm.includes(word)) return { blocked: true, word };
-  }
-  return { blocked: false };
-}
-
-document.addEventListener('DOMContentLoaded', () => loadBadWords());
-
 submitBtn.onclick = async () => {
   if (!user) { 
     showToast("Please sign in first!", 'warning'); 
@@ -951,17 +921,26 @@ submitBtn.onclick = async () => {
     return; 
   }
 
-  const key = `${user.email}_${currentType}`;
-  const lastTime = localStorage.getItem(key);
-  const now = Date.now();
-  const limit = currentType === 'suggestion' ? 7*24*60*60*1000 : 24*60*60*1000;
-  if (lastTime && now - parseInt(lastTime) < limit) {
-    const msLeft = limit - (now - parseInt(lastTime));
-    const hours = Math.floor(msLeft / (1000*60*60));
-    const minutes = Math.floor((msLeft % (1000*60*60)) / (1000*60));
+  const limit = currentType === 'suggestion'
+  ? 7 * 24 * 60 * 60 * 1000   // 1 week
+  : 24 * 60 * 60 * 1000;      // 1 day
+
+const limitRef = db.collection("submissionLimits").doc(`${user.uid}_${currentType}`);
+const snap = await limitRef.get();
+
+if (snap.exists) {
+  const lastTime = snap.data().lastTime?.toDate();
+  const now = new Date();
+
+  if (lastTime && now - lastTime < limit) {
+    const msLeft = limit - (now - lastTime);
+    const hours = Math.floor(msLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
     showToast(`Please wait ${hours}h ${minutes}m before submitting another ${currentType}.`, 'warning');
     return;
   }
+}
+
 
   submitBtn.disabled = true;
   showLoading();
@@ -970,20 +949,14 @@ submitBtn.onclick = async () => {
   try {
     const combinedText = `${name} ${className} ${section} ${rollno} ${message}`;
 
-    const localCheck = checkProfanity(combinedText);
-    if (localCheck.blocked) {
-      showToast("Your message contains inappropriate words.", 'warning');
-      return;
-    }
-
     const response = await fetch('https://vector.profanity.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: combinedText })
     });
     const data = await response.json();
-    if (data.score && data.score > 0.85) {
-      showToast("Your message contains inappropriate English words.", 'warning');
+    if(data.score && data.score > 0.85){
+      showToast("Your message contains inappropriate words. Please remove them.", 'warning');
       return;
     }
 
@@ -1000,27 +973,28 @@ submitBtn.onclick = async () => {
       timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    localStorage.setItem(key, Date.now());
+    await limitRef.set({
+  lastTime: firebase.firestore.FieldValue.serverTimestamp()
+});
     modalBg.classList.remove('show');
     ['name','class','section','rollno','message'].forEach(id=>document.getElementById(id).value='');
     await loadSuggestions();
     showToast("Submitted successfully!", 'success');
-
+    
     confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 }
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 }
     });
 
   } catch(err){ 
     showToast(`Submission failed: ${err.message}`, 'error'); 
   }
   finally{ 
-    submitBtn.disabled = false; 
+    submitBtn.disabled=false; 
     hideLoading(); 
   }
 };
-
 
 async function loadSuggestions(){
   if(!user){ 
@@ -1190,9 +1164,3 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
-
-
-
-
-
-
