@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ibn-e-Sina Portal</title>
-    <link rel="icon" type="image/png" href="images/image.png">
+    <title>ISC Student Portal</title>
+    <link rel="icon" type="image/png" href="images/image.png" style="border-radius: 8px 0 0 0;">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -36,6 +36,23 @@
         }
         .glow-hover:hover {
             box-shadow: 0 0 15px rgba(106, 13, 173, 0.6);
+            position: relative;
+        }
+        .glow-hover:hover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: inherit;
+            background: rgba(106, 13, 173, 0.3);
+            animation: glowFade 1s ease-out forwards;
+            z-index: -1;
+        }
+        @keyframes glowFade {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.2); }
         }
         .toast {
             animation: slideIn 0.5s forwards, fadeOut 0.5s 3s forwards;
@@ -47,12 +64,30 @@
             to { opacity: 0; transform: translateX(100px); }
         }
         .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            width: 50px;
+            height: 50px;
+            position: relative;
+        }
+        .spinner:before, .spinner:after {
+            content: "";
+            position: absolute;
             border-radius: 50%;
-            border-top: 4px solid #6a0dad;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            animation: spin 1.5s linear infinite;
+        }
+        .spinner:before {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(106, 13, 173, 0.2);
+        }
+        .spinner:after {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border: 4px solid transparent;
+            border-top-color: #6a0dad;
+            border-bottom-color: #9b59b6;
+            animation-duration: 1s;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -85,7 +120,7 @@
 
     <header class="fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-gray-900/90 to-transparent backdrop-blur-sm py-3 px-6 flex justify-between items-center shadow-lg">
         <div class="flex items-center">
-            <img src="images/image.png" alt="Ibn-e-Sina Logo" class="h-12">
+            <img src="images/image.png" alt="ISC Logo" class="h-12 rounded-tl-lg">
         </div>
 
         <div class="absolute left-1/2 transform -translate-x-1/2">
@@ -334,17 +369,18 @@
         // Modal functions
         function openModal(type) {
             if (!user) {
-                showToast("Please sign in first!", 'error');
+                showToast("🔒 Please sign in first!", 'error');
                 return;
             }
             currentType = type;
             modalTitle.textContent = type === 'suggestion' ? "Submit Suggestion" : "Submit Complaint";
             animateModal(modalBg, true);
             
-            // Clear previous inputs
+            // Clear previous inputs and focus on name
             ['name', 'class', 'section', 'rollno', 'message'].forEach(id => {
                 document.getElementById(id).value = '';
             });
+            document.getElementById('name').focus();
         }
         
         suggestionBtn.onclick = () => openModal('suggestion');
@@ -436,16 +472,23 @@
                 localStorage.setItem(key, Date.now());
                 animateModal(modalBg, false);
                 await loadSuggestions();
-                showToast("Submitted successfully!", 'success');
+                showToast("🎉 Submitted successfully!", 'success');
                 
-                // Confetti celebration
+                // Enhanced confetti celebration
                 confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 }
+                    particleCount: 250,
+                    spread: 100,
+                    origin: { y: 0.6 },
+                    colors: ['#6a0dad', '#9b59b6', '#ffffff'],
+                    shapes: ['circle', 'square'],
+                    scalar: 1.2
                 });
             } catch (err) {
-                showToast(`Error: ${err.message}`, 'error');
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                    showToast("Invalid Credentials, try again", 'error');
+                } else {
+                    showToast(`Error: ${err.message}`, 'error');
+                }
             } finally {
                 submitBtn.disabled = false;
                 hideLoading();
@@ -628,7 +671,11 @@
                 emailLoginBtn.classList.add('hidden');
                 await loadSuggestions();
             } catch (err) {
-                showToast(`Error: ${err.message}`, 'error');
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                    showToast("Invalid Credentials, try again", 'error');
+                } else {
+                    showToast(`Error: ${err.message}`, 'error');
+                }
                 await auth.signOut();
                 user = null;
             } finally {
