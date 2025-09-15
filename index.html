@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ibn-e-Sina Portal</title>
+<title>ISC Student Portal</title>
 <link rel="icon" type="image/png" href="images/image.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -46,7 +46,6 @@ body {
   padding-top: 80px;
 }
 
-/* Header Styles */
 .site-header {
   width: 100%;
   display: flex;
@@ -160,8 +159,8 @@ body {
   background: var(--secondary-light);
 }
 
-/* Profile Section */
-.profile-section {
+
+  .profile-section {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -210,8 +209,6 @@ h2 {
   line-height: 1.6;
   font-size: 1.05rem;
 }
-
-/* Action Buttons */
 .actions {
   display: flex;
   flex-direction: column;
@@ -247,7 +244,6 @@ h2 {
   transform: translateY(0);
 }
 
-/* Suggestions Container */
 #suggestions-container {
   margin-top: 20px;
   width: 90%;
@@ -286,7 +282,6 @@ h2 {
   color: var(--text-secondary);
 }
 
-/* Vote Container */
 .vote-container {
   display: flex;
   justify-content: center;
@@ -320,7 +315,6 @@ h2 {
   text-align: center;
 }
 
-/* Modals */
 .modal-bg, .popup {
   display: none;
   position: fixed;
@@ -404,7 +398,6 @@ h2 {
   background: var(--secondary-light);
 }
 
-/* Password Toggle */
 #toggle-password {
   position: absolute;
   right: 12px;
@@ -414,8 +407,6 @@ h2 {
   font-size: 18px;
   color: var(--text-secondary);
 }
-
-/* Toast Messages */
 #toast-container {
   position: fixed;
   top: 20px;
@@ -472,7 +463,7 @@ h2 {
   }
 }
 
-/* Footer */
+
 #footer {
   position: fixed;
   bottom: 10px;
@@ -501,7 +492,7 @@ h2 {
   text-decoration: underline;
 }
 
-/* Loading Overlay - Improved */
+
 #loading-overlay {
   position: fixed;
   top: 0;
@@ -512,14 +503,13 @@ h2 {
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 3000; /* Increased z-index to appear above modals */
+  z-index: 3000;
 }
 
 #loading-overlay.show {
   display: flex;
 }
 
-/* New improved spinner animation */
 .spinner {
   width: 60px;
   height: 60px;
@@ -562,7 +552,6 @@ h2 {
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   body {
     padding-top: 70px;
@@ -724,10 +713,8 @@ h2 {
 
 <div id="suggestions-container"></div>
 
-<!-- Loading overlay -->
 <div id="loading-overlay"><div class="spinner"></div></div>
 
-<!-- Suggestion/Complaint Modal -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h3 id="modal-title"><i class="fas fa-edit"></i> Submit</h3>
@@ -740,8 +727,7 @@ h2 {
     <button class="close" id="close-modal"><i class="fas fa-times"></i> Cancel</button>
   </div>
 </div>
-
-<!-- Email Login Modal -->
+  
 <div id="email-modal" class="popup">
   <div class="popup-content">
     <h3><i class="fas fa-envelope"></i> Email Login / Signup</h3>
@@ -757,7 +743,7 @@ h2 {
 </div>
 
 <script>
-// Performance optimization - preload critical resources
+
 function preloadCriticalResources() {
   const resources = [
     'images/image.png',
@@ -773,14 +759,12 @@ function preloadCriticalResources() {
   });
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   preloadCriticalResources();
   
-  // Set favicon with rounded corners
   const favicon = document.querySelector('link[rel="icon"]');
   if (favicon) {
-    // Create a canvas to generate a rounded version of the favicon
+   
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.src = favicon.href;
@@ -790,16 +774,13 @@ document.addEventListener('DOMContentLoaded', function() {
       canvas.height = 32;
       const ctx = canvas.getContext('2d');
       
-      // Draw rounded rectangle
       ctx.beginPath();
       ctx.arc(16, 16, 16, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
       
-      // Draw the image
       ctx.drawImage(img, 0, 0, 32, 32);
       
-      // Replace the favicon
       const newFavicon = document.createElement('link');
       newFavicon.rel = 'icon';
       newFavicon.href = canvas.toDataURL('image/png');
@@ -853,7 +834,6 @@ function showToast(msg, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   
-  // Add appropriate emoji based on message type
   let emoji = 'ℹ️';
   if (type === 'success') emoji = '✅';
   else if (type === 'error') emoji = '❌';
@@ -1045,14 +1025,12 @@ async function loadSuggestions(){
         const data = snap.data();
 
         if ((data.upvoters || []).includes(user.uid)) {
-          // remove upvote
           await docRef.update({
             upvotes: firebase.firestore.FieldValue.increment(-1),
             upvoters: firebase.firestore.FieldValue.arrayRemove(user.uid)
           });
           showToast("Upvote removed", 'info');
         } else if ((data.downvoters || []).includes(user.uid)) {
-          // switch downvote → upvote
           await docRef.update({
             downvotes: firebase.firestore.FieldValue.increment(-1),
             downvoters: firebase.firestore.FieldValue.arrayRemove(user.uid),
@@ -1061,7 +1039,6 @@ async function loadSuggestions(){
           });
           showToast("Switched to upvote", 'info');
         } else {
-          // add upvote
           await docRef.update({
             upvotes: firebase.firestore.FieldValue.increment(1),
             upvoters: firebase.firestore.Value.arrayUnion(user.uid)
@@ -1078,14 +1055,12 @@ async function loadSuggestions(){
         const data = snap.data();
 
         if ((data.downvoters || []).includes(user.uid)) {
-          // remove downvote
           await docRef.update({
             downvotes: firebase.firestore.FieldValue.increment(-1),
             downvoters: firebase.firestore.FieldValue.arrayRemove(user.uid)
           });
           showToast("Downvote removed", 'info');
         } else if ((data.upvoters || []).includes(user.uid)) {
-          // switch upvote → downvote
           await docRef.update({
             upvotes: firebase.firestore.FieldValue.increment(-1),
             upvoters: firebase.firestore.FieldValue.arrayRemove(user.uid),
@@ -1094,7 +1069,6 @@ async function loadSuggestions(){
           });
           showToast("Switched to downvote", 'info');
         } else {
-          // add downvote
           await docRef.update({
             downvotes: firebase.firestore.FieldValue.increment(1),
             downvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
@@ -1111,8 +1085,7 @@ async function loadSuggestions(){
   }
 }
 
-// Email login / signup
-emailSubmitBtn.onclick=async ()=>{
+  emailSubmitBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
   const pass=passwordInput.value.trim();
   if(!email||!pass){ 
@@ -1151,7 +1124,6 @@ emailSubmitBtn.onclick=async ()=>{
   finally{hideLoading();}
 };
 
-// Password reset
 resetPasswordBtn.onclick=async ()=>{
   const email=emailInput.value.trim();
   if(!email){ 
@@ -1181,3 +1153,4 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
