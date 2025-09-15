@@ -437,8 +437,8 @@
                     return;
                 }
                 
-                // Send to Google Apps Script
-                await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec', {
+                // Send to Google Apps Script with CORS and response handling
+                const gscriptResponse = await fetch('https://script.google.com/macros/s/AKfycbxbXiK4j4xHddht46t48_SeDTrIMHG01HTSIdRLnPSvph8eZ1R9iPI-wdGNfaCZjALf/exec', {
                     method: 'POST',
                     body: JSON.stringify({
                         name, 
@@ -449,9 +449,20 @@
                         type: currentType, 
                         email: user.email
                     }),
-                    headers: { 'Content-Type': 'application/json' },
-                    mode: 'no-cors'
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
                 });
+
+                if (!gscriptResponse.ok) {
+                    throw new Error('Failed to send email notification');
+                }
+
+                const gscriptData = await gscriptResponse.json();
+                if (!gscriptData.success) {
+                    throw new Error(gscriptData.error || 'Email notification failed');
+                }
                 
                 // Save to Firestore
                 await db.collection('submissions').add({
