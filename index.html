@@ -838,6 +838,7 @@ function openModal(type){
   currentType=type; 
   modalTitle.innerHTML = type==='suggestion' ? '<i class="fas fa-lightbulb"></i> Submit Suggestion' : '<i class="fas fa-exclamation-circle"></i> Submit Complaint'; 
   modalBg.classList.add('show');
+  setTimeout(() => document.getElementById('name').focus(), 100);
 }
 suggestionBtn.onclick = ()=>openModal('suggestion');
 complaintBtn.onclick = ()=>openModal('complaint');
@@ -1103,3 +1104,4 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
