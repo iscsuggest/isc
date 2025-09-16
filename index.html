@@ -69,6 +69,40 @@ body {
   flex: 0 0 auto;
 }
 
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#loading-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #ccc;
+  border-top: 5px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .header-left img {
   height: 45px;
   display: block;
@@ -893,7 +927,7 @@ async function loadSuggestions(){
         } else {
           await docRef.update({
             upvotes: firebase.firestore.FieldValue.increment(1),
-            upvoters: firebase.firestore.Value.arrayUnion(user.uid)
+            upvoters: firebase.firestore.FieldValue.arrayUnion(user.uid)
           });
           showToast("Upvoted successfully!", 'success');
         }
@@ -1005,6 +1039,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
