@@ -762,6 +762,8 @@ const togglePassword = document.getElementById('toggle-password');
 const emailSubmitBtn = document.getElementById('email-submit-btn');
 const resetPasswordBtn = document.getElementById('reset-password-btn');
 const emailCloseBtn = emailModal.querySelector('.close-btn');
+const form = document.getElementById('suggestionForm');
+const inputs = form.querySelectorAll('input, textarea');
 
 let currentType = null;
 let user = null;
@@ -1093,6 +1095,20 @@ resetPasswordBtn.onclick=async ()=>{
   }
   finally{hideLoading();}
 };
+
+
+inputs.forEach((input, index) => {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      } else {
+        form.requestSubmit();
+      }
+    }
+  });
+});
 </script>
 
 <footer id="footer">
@@ -1104,4 +1120,5 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
