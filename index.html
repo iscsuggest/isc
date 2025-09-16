@@ -81,8 +81,10 @@ body {
 }
 
 .header-center {
-  position: static;
-  transform: none;
+  position: absolute;
+  top: 50%;          
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 100%;
   text-align: center;
   margin-top: 10px;
@@ -482,6 +484,7 @@ h2 {
 
   .site-header {
     flex-wrap: wrap;
+    justify-content: space-between;
     padding: 10px 15px;
   }
 
@@ -1002,6 +1005,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
