@@ -633,6 +633,29 @@ h2 {
   align-items: stretch;
 }
 
+.header-right button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  line-height: normal;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.header-right {
+  align-items: stretch;
+}
+
+button, a, .feature-card {
+  position: relative;
+  z-index: 50;
+}
+
+header, .fixed {
+  z-index: 10;
+}
+
 </style>
 
 </head>
@@ -1118,6 +1141,7 @@ resetPasswordBtn.onclick=async ()=>{
 
 </body>
 </html>
+
 
 
 
